@@ -1,0 +1,29 @@
+# Backend and API
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+
+# ML and Image Processing
+torch==2.2.0
+torchvision==0.17.0
+pillow==10.2.0
+numpy==1.26.3
+scikit-learn==1.4.0
+opencv-python==4.9.0.80
+
+# Utilities
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+aiofiles==23.2.1
+httpx==0.26.0
+
+# Monitoring and Logging
+loguru==0.7.2
