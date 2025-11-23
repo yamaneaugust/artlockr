@@ -1,0 +1,23 @@
+# Core ML and Image Processing (from backend requirements)
+torch==2.2.0
+torchvision==0.17.0
+pillow==10.2.0
+numpy==1.26.3
+scikit-learn==1.4.0
+opencv-python==4.9.0.80
+
+# Training-specific dependencies
+matplotlib==3.8.2
+seaborn==0.13.1
+tensorboard==2.15.1
+pyyaml==6.0.1
+tqdm==4.66.1
+
+# Model optimization
+albumentations==1.3.1
+
+# Data handling
+pandas==2.1.4
+
+# Utilities
+loguru==0.7.2
