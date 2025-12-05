@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
 from backend.app.api.endpoints import router as api_router
+from backend.app.api.privacy_endpoints import router as privacy_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -15,10 +16,18 @@ app = FastAPI(
     original works.
 
     Features:
-    - Upload original artwork
+    - Upload original artwork with PRIVACY-FIRST storage (features only, no images)
+    - Cryptographic proof of ownership
     - Detect copyright infringement using ResNet-based similarity matching
     - API gating to block organizations from accessing protected artwork
+    - GDPR/CCPA compliant data controls
     - Comprehensive tracking and reporting
+
+    PRIVACY GUARANTEE:
+    - We store ONLY feature vectors by default, not your original artwork
+    - Images are deleted immediately after feature extraction
+    - Cryptographic proofs ensure you can verify ownership
+    - Full data transparency and export capabilities
     """
 )
 
@@ -32,7 +41,8 @@ app.add_middleware(
 )
 
 # Include API routes
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=settings.API_V1_STR, tags=["Copyright Detection"])
+app.include_router(privacy_router, prefix=settings.API_V1_STR, tags=["Privacy & Security"])
 
 
 @app.get("/")
@@ -42,14 +52,26 @@ async def root():
         "name": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "status": "operational",
+        "privacy_first": True,
+        "features": {
+            "feature_only_storage": "We only store feature vectors, not your artwork",
+            "cryptographic_proof": "Every upload gets a cryptographic ownership proof",
+            "gdpr_compliant": "Full data transparency, export, and deletion",
+            "auto_deletion": "Images deleted immediately after feature extraction"
+        },
         "endpoints": {
+            "privacy_upload": f"{settings.API_V1_STR}/upload-artwork-private",
             "upload_artwork": f"{settings.API_V1_STR}/upload-artwork",
             "detect_copyright": f"{settings.API_V1_STR}/detect-copyright/{{artwork_id}}",
             "detection_results": f"{settings.API_V1_STR}/detection-results/{{artwork_id}}",
             "block_organization": f"{settings.API_V1_STR}/api-gate/block",
             "check_access": f"{settings.API_V1_STR}/api-gate/check",
-            "statistics": f"{settings.API_V1_STR}/statistics"
-        }
+            "statistics": f"{settings.API_V1_STR}/statistics",
+            "my_data": f"{settings.API_V1_STR}/privacy/my-data",
+            "delete_all_data": f"{settings.API_V1_STR}/privacy/delete-all",
+            "verify_proof": f"{settings.API_V1_STR}/privacy/verify-proof/{{proof_hash}}"
+        },
+        "documentation": f"{settings.API_V1_STR.replace('/api', '')}/docs"
     }
 
 

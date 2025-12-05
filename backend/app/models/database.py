@@ -19,10 +19,19 @@ class Artist(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Privacy Settings
+    storage_mode = Column(String, default='features_only')  # 'features_only', 'encrypted', 'full'
+    auto_delete_images = Column(Boolean, default=True)  # Delete images after feature extraction
+    data_retention_days = Column(Integer, default=30)  # How long to keep feature data
+    consent_privacy_policy = Column(Boolean, default=False)  # GDPR/CCPA consent
+    consent_notifications = Column(Boolean, default=False)  # Email notification consent
+    consent_date = Column(DateTime)  # When consent was given
+
     # Relationships
     artworks = relationship("Artwork", back_populates="artist")
     api_gates = relationship("APIGate", back_populates="artist")
     detection_results = relationship("DetectionResult", back_populates="artist")
+    privacy_settings = relationship("ArtistPrivacySettings", back_populates="artist", uselist=False)
 
 
 class Artwork(Base):
@@ -33,12 +42,28 @@ class Artwork(Base):
     artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text)
-    file_path = Column(String, nullable=False)
-    file_hash = Column(String, unique=True, index=True)  # For deduplication
-    feature_path = Column(String)  # Path to extracted features
+    file_path = Column(String)  # Nullable now - may not store actual file
+    file_hash = Column(String, unique=True, index=True)  # SHA-256 hash
+    feature_path = Column(String)  # Path to extracted features (always stored)
     upload_date = Column(DateTime, default=datetime.utcnow)
     is_public = Column(Boolean, default=True)
     metadata = Column(JSON)  # Store additional metadata
+
+    # Art Style & Detection Settings
+    art_style = Column(String, default='general')  # photorealistic, digital_art, abstract, etc.
+    complexity = Column(String, default='medium')  # simple, medium, complex
+    custom_threshold = Column(Float)  # Artist can override default threshold
+
+    # Privacy & Security
+    storage_mode = Column(String, default='features_only')  # How this artwork is stored
+    image_deleted = Column(Boolean, default=False)  # Was original image deleted?
+    image_deleted_date = Column(DateTime)  # When was image deleted
+    scheduled_deletion_date = Column(DateTime)  # Auto-delete on this date
+
+    # Cryptographic Proof
+    upload_proof_hash = Column(String)  # SHA-256(image + timestamp + artist_id)
+    upload_signature = Column(String)  # Cryptographic signature
+    blockchain_tx = Column(String)  # Optional: blockchain transaction ID
 
     # Relationships
     artist = relationship("Artist", back_populates="artworks")
@@ -129,3 +154,65 @@ class AccessLog(Base):
 
     # Relationships
     api_gate = relationship("APIGate", back_populates="access_logs")
+
+
+class ArtistPrivacySettings(Base):
+    """Detailed privacy settings and audit trail for artists"""
+    __tablename__ = "artist_privacy_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False, unique=True)
+
+    # Data Storage Preferences
+    prefer_features_only = Column(Boolean, default=True)
+    allow_image_caching = Column(Boolean, default=False)
+    allow_analytics = Column(Boolean, default=False)
+
+    # Notification Preferences
+    notify_on_match = Column(Boolean, default=True)
+    notify_on_scan = Column(Boolean, default=False)
+    notify_on_data_access = Column(Boolean, default=True)
+
+    # Data Export & Deletion
+    last_data_export = Column(DateTime)
+    data_export_count = Column(Integer, default=0)
+    deletion_requested = Column(Boolean, default=False)
+    deletion_request_date = Column(DateTime)
+    deletion_scheduled_date = Column(DateTime)
+
+    # Audit Trail
+    settings_updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    total_artworks_uploaded = Column(Integer, default=0)
+    total_images_deleted = Column(Integer, default=0)
+
+    # Relationships
+    artist = relationship("Artist", back_populates="privacy_settings")
+
+
+class UploadProof(Base):
+    """Cryptographic proof of artwork upload for ownership verification"""
+    __tablename__ = "upload_proofs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    artwork_id = Column(Integer, ForeignKey("artworks.id"), nullable=False)
+    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
+
+    # Cryptographic Data
+    file_hash = Column(String, nullable=False)  # SHA-256 of original file
+    proof_hash = Column(String, unique=True, index=True, nullable=False)  # Composite hash
+    signature = Column(String)  # Digital signature
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Blockchain Integration (optional)
+    blockchain_network = Column(String)  # ethereum, polygon, etc.
+    blockchain_tx_hash = Column(String)  # Transaction hash
+    blockchain_block_number = Column(Integer)  # Block number
+    blockchain_confirmed = Column(Boolean, default=False)
+
+    # Verification
+    verification_url = Column(String)  # Public URL to verify proof
+    is_verified = Column(Boolean, default=False)
+    verified_at = Column(DateTime)
+
+    # Metadata
+    proof_data = Column(JSON)  # Additional proof metadata
