@@ -18,12 +18,16 @@ numpy==1.26.3
 scikit-learn==1.4.0
 opencv-python==4.9.0.80
 
+# Vector Search
+faiss-cpu==1.7.4  # Use faiss-gpu if CUDA available
+
 # Utilities
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
 aiofiles==23.2.1
 httpx==0.26.0
+tqdm==4.66.1
 
 # Monitoring and Logging
 loguru==0.7.2

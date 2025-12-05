@@ -49,6 +49,10 @@ data/features/*
 *.pt
 *.onnx
 
+# FAISS indexes (large binary files)
+ml_models/indexes/*
+!ml_models/indexes/.gitkeep
+
 # Database
 *.db
 *.sqlite
