@@ -16,6 +16,7 @@ torchvision==0.17.0
 pillow==10.2.0
 numpy==1.26.3
 scikit-learn==1.4.0
+scikit-image==0.22.0  # For SSIM computation
 opencv-python==4.9.0.80
 
 # Vector Search
