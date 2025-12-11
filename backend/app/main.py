@@ -5,6 +5,7 @@ from backend.app.api.endpoints import router as api_router
 from backend.app.api.privacy_endpoints import router as privacy_router
 from backend.app.api.faiss_endpoints import router as faiss_router
 from backend.app.api.security_endpoints import router as security_router
+from backend.app.api.compliance_endpoints import router as compliance_router
 from backend.app.middleware.security_middleware import (
     SecurityMiddleware,
     OrganizationBlockingMiddleware,
@@ -29,8 +30,9 @@ app = FastAPI(
     - Multi-metric similarity fusion for ~95% accuracy
     - Detect copyright infringement using ResNet-based similarity matching
     - API gating to block organizations from accessing protected artwork
-    - GDPR/CCPA compliant data controls
+    - GDPR/CCPA/COPPA compliant data controls
     - Comprehensive tracking and reporting
+    - Optional invisible watermarking
 
     PRIVACY GUARANTEE:
     - We store ONLY feature vectors by default, not your original artwork
@@ -50,6 +52,13 @@ app = FastAPI(
     - Organization blocking for copyright infringers
     - Request verification beyond user agents
     - Real-time threat detection and blocking
+
+    COMPLIANCE:
+    - Full GDPR, CCPA, and COPPA compliance
+    - Granular consent management
+    - Cookie policy and preferences
+    - Age verification system
+    - Complete audit trails
     """
 )
 
@@ -72,6 +81,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR, tags=["Copyright Dete
 app.include_router(privacy_router, prefix=settings.API_V1_STR, tags=["Privacy & Security"])
 app.include_router(faiss_router, prefix=settings.API_V1_STR, tags=["Fast Search (FAISS)"])
 app.include_router(security_router, prefix=settings.API_V1_STR, tags=["Security Management"])
+app.include_router(compliance_router, prefix=settings.API_V1_STR, tags=["Compliance"])
 
 
 @app.get("/")
@@ -85,13 +95,17 @@ async def root():
         "features": {
             "feature_only_storage": "We only store feature vectors, not your artwork",
             "cryptographic_proof": "Every upload gets a cryptographic ownership proof",
-            "gdpr_compliant": "Full data transparency, export, and deletion",
+            "gdpr_ccpa_coppa_compliant": "Full GDPR, CCPA, and COPPA compliance",
             "auto_deletion": "Images deleted immediately after feature extraction",
             "faiss_search": "100,000x faster vector search with FAISS",
             "multi_metric_fusion": "~95% accuracy with 5-metric similarity fusion",
             "ai_attack_defense": "Adversarial attack detection and query pattern analysis",
             "organization_blocking": "Block infringing organizations from API access",
-            "multi_layer_security": "IP reputation + rate limiting + behavioral analysis"
+            "multi_layer_security": "IP reputation + rate limiting + behavioral analysis",
+            "consent_management": "Granular consent control with audit trails",
+            "cookie_management": "GDPR-compliant cookie preferences",
+            "age_verification": "COPPA-compliant age verification",
+            "optional_watermarking": "Invisible watermarking for usage tracking"
         },
         "endpoints": {
             "privacy_upload": f"{settings.API_V1_STR}/upload-artwork-private",
@@ -107,6 +121,14 @@ async def root():
             "rate_limit_status": f"{settings.API_V1_STR}/rate-limit/status",
             "security_analytics": f"{settings.API_V1_STR}/security/analytics",
             "generate_token": f"{settings.API_V1_STR}/security/generate-token",
+            "consent_status": f"{settings.API_V1_STR}/consent/status",
+            "grant_consent": f"{settings.API_V1_STR}/consent/grant",
+            "cookie_preferences": f"{settings.API_V1_STR}/cookies/preferences",
+            "age_verification": f"{settings.API_V1_STR}/age-verification/verify",
+            "watermarking_config": f"{settings.API_V1_STR}/watermarking/configure",
+            "compliance_dashboard": f"{settings.API_V1_STR}/compliance/dashboard",
+            "terms_of_service": f"{settings.API_V1_STR}/legal/terms-of-service",
+            "privacy_policy": f"{settings.API_V1_STR}/legal/privacy-policy",
             "statistics": f"{settings.API_V1_STR}/statistics",
             "my_data": f"{settings.API_V1_STR}/privacy/my-data",
             "delete_all_data": f"{settings.API_V1_STR}/privacy/delete-all",
