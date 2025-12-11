@@ -17,6 +17,7 @@ pillow==10.2.0
 numpy==1.26.3
 scikit-learn==1.4.0
 scikit-image==0.22.0  # For SSIM computation
+scipy==1.11.4  # For noise pattern analysis in AI defense
 opencv-python==4.9.0.80
 
 # Vector Search
