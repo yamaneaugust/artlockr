@@ -30,6 +30,7 @@ python-dotenv==1.0.0
 aiofiles==23.2.1
 httpx==0.26.0
 tqdm==4.66.1
+schedule==1.2.0  # For scheduled scanning jobs
 
 # Monitoring and Logging
 loguru==0.7.2
