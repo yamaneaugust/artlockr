@@ -9,6 +9,7 @@ pydantic-settings==2.1.0
 sqlalchemy==2.0.25
 asyncpg==0.29.0
 alembic==1.13.1
+psycopg2-binary==2.9.9  # For database initialization and backups
 
 # ML and Image Processing
 torch==2.2.0
