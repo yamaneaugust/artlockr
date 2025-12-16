@@ -1,0 +1,81 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+
+# Documentation
+*.md
+LICENSE
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Data directories
+data/uploads/*
+data/features/*
+data/ai_images/*
+data/faiss_indexes/*
+data/backups/*
+
+# Keep directory structure
+!data/uploads/.gitkeep
+!data/features/.gitkeep
+!data/ai_images/.gitkeep
+!data/faiss_indexes/.gitkeep
+!data/backups/.gitkeep
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+dist
+.next
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# ML Models (download separately)
+*.pth
+*.pt
+*.h5
+*.pkl
+checkpoints/
+
+# Docker
+docker-compose.override.yml

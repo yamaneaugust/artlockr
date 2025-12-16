@@ -1,39 +1,106 @@
 version: '3.8'
 
 services:
-  postgres:
+  # PostgreSQL Database
+  db:
     image: postgres:15-alpine
+    container_name: artlockr-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: artlockr
-      POSTGRES_PASSWORD: artlockr
       POSTGRES_DB: artlockr_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: artlockr
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-artlockr_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/backup_database.sh:/backups/backup_database.sh
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U artlockr"]
+      test: ["CMD-SHELL", "pg_isready -U artlockr -d artlockr_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - artlockr-network
 
-  api:
+  # Backend API
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
+    container_name: artlockr-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://artlockr:${DB_PASSWORD:-artlockr_password}@db:5432/artlockr_db
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+      - backend_logs:/app/logs
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://artlockr:artlockr@postgres/artlockr_db
-      - DEVICE=cpu  # Change to cuda if GPU available
-    volumes:
-      - ./data:/app/data
-      - ./backend:/app/backend
-      - ./ml_models:/app/ml_models
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - artlockr-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+    container_name: artlockr-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - artlockr-network
+
+  # Optional: Background worker for scheduled scanning
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: artlockr-worker
+    restart: unless-stopped
+    command: python scripts/scheduled_scanner.py
+    environment:
+      DATABASE_URL: postgresql://artlockr:${DB_PASSWORD:-artlockr_password}@db:5432/artlockr_db
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+      - backend_logs:/app/logs
+    depends_on:
+      - db
+      - backend
+    networks:
+      - artlockr-network
+
+networks:
+  artlockr-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+    driver: local
+  backend_data:
+    driver: local
+  backend_logs:
+    driver: local
