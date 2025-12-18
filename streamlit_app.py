@@ -39,9 +39,7 @@ st.markdown("""
     .main-header {
         font-size: 3rem;
         font-weight: 700;
-        background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #667eea;
         margin-bottom: 1rem;
     }
     .step-indicator {
@@ -52,7 +50,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .step-active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #667eea;
         color: white;
         padding: 0.5rem 1rem;
         border-radius: 0.25rem;
@@ -67,7 +65,7 @@ st.markdown("""
         padding: 0.5rem 1rem;
     }
     .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #667eea;
         padding: 1.5rem;
         border-radius: 0.5rem;
         color: white;
