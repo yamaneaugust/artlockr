@@ -32,6 +32,8 @@ if 'current_step' not in st.session_state:
     st.session_state.current_step = 1
 if 'just_uploaded' not in st.session_state:
     st.session_state.just_uploaded = None
+if 'has_subscription' not in st.session_state:
+    st.session_state.has_subscription = False
 
 # Custom CSS
 st.markdown("""
@@ -114,9 +116,9 @@ def detect_copyright_mock(artwork_hash, threshold=0.85):
 
     for i in range(num_matches):
         matches.append({
-            'source': f'AI Model {random.choice(["Midjourney", "DALL-E", "Stable Diffusion"])}',
+            'source': f'AI Model {random.choice(["Midjourney", "DALL-E", "Stable Diffusion", "Baidu AI", "Tencent AI"])}',
             'similarity': random.uniform(threshold, 0.98),
-            'platform': random.choice(['DeviantArt', 'ArtStation', 'Pinterest', 'Instagram']),
+            'platform': random.choice(['DeviantArt', 'ArtStation', 'Pinterest', 'Instagram', 'Weibo', 'Xiaohongshu', 'Douyin', 'Bilibili']),
             'detected_date': datetime.now().strftime('%Y-%m-%d')
         })
 
@@ -384,31 +386,64 @@ elif st.session_state.current_step == 3:
 
             st.markdown("### Block Infringing Organizations")
 
-            with st.form("block_org_form"):
-                org_name = st.text_input("Organization Name", placeholder="e.g., Company that used your artwork")
-                org_domain = st.text_input("Domain (optional)", placeholder="e.g., company.com")
-                reason = st.text_area("Reason for Blocking", placeholder="e.g., Unauthorized use of my artwork for AI training")
+            # Check subscription status
+            if not st.session_state.has_subscription:
+                st.info("Upgrade to Premium to block organizations from accessing your artwork features.")
 
-                if st.form_submit_button("Block Organization", type="primary"):
-                    if org_name:
-                        blocked = {
-                            'id': len(st.session_state.blocked_orgs) + 1,
-                            'name': org_name,
-                            'domain': org_domain,
-                            'reason': reason,
-                            'blocked_date': datetime.now().strftime('%Y-%m-%d %H:%M')
-                        }
-                        st.session_state.blocked_orgs.append(blocked)
-                        st.success(f"Successfully blocked {org_name}")
-                    else:
-                        st.error("Please enter an organization name")
+                st.markdown("""
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 0.5rem; border: 2px solid #667eea; margin: 1rem 0;">
+                    <h3 style="color: #667eea; text-align: center; margin-bottom: 1rem;">ArtLockr Premium</h3>
+                    <div style="text-align: center;">
+                        <p style="font-size: 2.5rem; font-weight: 700; color: #667eea; margin: 0;">$17.99</p>
+                        <p style="color: #666; margin-bottom: 1.5rem;">per quarter (3 months)</p>
+                    </div>
+                    <div style="margin: 1.5rem 0;">
+                        <p><strong>Premium Features:</strong></p>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>✓ Block unlimited organizations from accessing your art</li>
+                            <li>✓ API-level protection and access control</li>
+                            <li>✓ Real-time blocking enforcement</li>
+                            <li>✓ Detailed access logs and analytics</li>
+                            <li>✓ Priority copyright protection</li>
+                        </ul>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            if st.session_state.blocked_orgs:
-                st.markdown("### Currently Blocked Organizations")
-                for org in st.session_state.blocked_orgs:
-                    with st.expander(f"{org['name']} (Blocked: {org['blocked_date']})"):
-                        st.markdown(f"**Domain:** {org['domain'] or 'Not specified'}")
-                        st.markdown(f"**Reason:** {org['reason'] or 'Not specified'}")
+                col_a, col_b, col_c = st.columns([1, 2, 1])
+                with col_b:
+                    if st.button("Subscribe to Premium - $17.99/quarter", type="primary", use_container_width=True):
+                        st.session_state.has_subscription = True
+                        st.success("Subscription activated! You can now block organizations.")
+                        st.rerun()
+            else:
+                st.success("Premium Active - You can block organizations")
+
+                with st.form("block_org_form"):
+                    org_name = st.text_input("Organization Name", placeholder="e.g., Company that used your artwork")
+                    org_domain = st.text_input("Domain (optional)", placeholder="e.g., company.com")
+                    reason = st.text_area("Reason for Blocking", placeholder="e.g., Unauthorized use of my artwork for AI training")
+
+                    if st.form_submit_button("Block Organization", type="primary"):
+                        if org_name:
+                            blocked = {
+                                'id': len(st.session_state.blocked_orgs) + 1,
+                                'name': org_name,
+                                'domain': org_domain,
+                                'reason': reason,
+                                'blocked_date': datetime.now().strftime('%Y-%m-%d %H:%M')
+                            }
+                            st.session_state.blocked_orgs.append(blocked)
+                            st.success(f"Successfully blocked {org_name}")
+                        else:
+                            st.error("Please enter an organization name")
+
+                if st.session_state.blocked_orgs:
+                    st.markdown("### Currently Blocked Organizations")
+                    for org in st.session_state.blocked_orgs:
+                        with st.expander(f"{org['name']} (Blocked: {org['blocked_date']})"):
+                            st.markdown(f"**Domain:** {org['domain'] or 'Not specified'}")
+                            st.markdown(f"**Reason:** {org['reason'] or 'Not specified'}")
 
         else:
             st.success("No copyright infringement detected! Your artwork appears to be safe.")
