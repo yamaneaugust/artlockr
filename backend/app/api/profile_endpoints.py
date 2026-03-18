@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from backend.app.models.database import User, ArtistProfile, CompanyProfile, Listing, Purchase
-from backend.app.core.database import get_db
+from backend.app.db.session import get_db
 
 router = APIRouter(prefix="/profiles", tags=["Profiles"])
 

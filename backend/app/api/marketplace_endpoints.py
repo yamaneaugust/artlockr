@@ -22,7 +22,7 @@ from backend.app.models.database import (
     PublicDatasetEntry,
 )
 from backend.app.services import marketplace_service, common_crawl
-from backend.app.core.database import get_db
+from backend.app.db.session import get_db
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
 

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.models.database import User
 from backend.app.services import stripe_service, marketplace_service
-from backend.app.core.database import get_db
+from backend.app.db.session import get_db
 
 router = APIRouter(prefix="/stripe", tags=["Stripe"])
 
