@@ -4,7 +4,7 @@
 set -e
 
 echo "============================================"
-echo "ArtLockr Quick Demo (UI Only)"
+echo "ArtLock Quick Demo (UI Only)"
 echo "============================================"
 echo ""
 
@@ -40,7 +40,7 @@ python -c "
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title='ArtLockr Demo API')
+app = FastAPI(title='ArtLock Demo API')
 
 app.add_middleware(
     CORSMiddleware,
@@ -79,7 +79,7 @@ sleep 5
 
 echo ""
 echo "============================================"
-echo "✓ ArtLockr Demo is running!"
+echo "✓ ArtLock Demo is running!"
 echo "============================================"
 echo ""
 echo "Frontend: http://localhost:3000"

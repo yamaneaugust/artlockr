@@ -1,8 +1,8 @@
-# ArtLockr Privacy & Security Features
+# ArtLock Privacy & Security Features
 
 ## 🔒 Privacy-First Architecture
 
-ArtLockr is built with artist trust as the foundation. We understand that artists are rightfully concerned about uploading their precious artwork to yet another platform. Here's how we protect your intellectual property:
+ArtLock is built with artist trust as the foundation. We understand that artists are rightfully concerned about uploading their precious artwork to yet another platform. Here's how we protect your intellectual property:
 
 ## ✅ What We Do
 
@@ -36,7 +36,7 @@ Every upload generates:
 **Example certificate:**
 ```json
 {
-  "certificate_type": "ArtLockr Ownership Proof",
+  "certificate_type": "ArtLock Ownership Proof",
   "artwork_id": 123,
   "artist_id": 456,
   "upload_timestamp": "2025-01-15T10:30:00Z",
@@ -175,7 +175,7 @@ A: Fair! Use client-side feature extraction (coming soon) - extract features in 
 **Q: Can I verify my ownership proof without your platform?**
 A: Yes! Proof hashes are standard SHA-256. Anyone with the formula can verify: `SHA256(file_hash:artist_id:timestamp)`.
 
-**Q: What happens if ArtLockr shuts down?**
+**Q: What happens if ArtLock shuts down?**
 A: You can export all your data (proofs, hashes, features) before shutdown. Cryptographic proofs remain valid forever.
 
 ## 📖 Privacy API Endpoints
@@ -264,7 +264,7 @@ If you have privacy concerns or questions:
 
 ---
 
-**Bottom Line**: We built ArtLockr to PROTECT artists, not exploit them. Privacy is not a feature - it's the foundation.
+**Bottom Line**: We built ArtLock to PROTECT artists, not exploit them. Privacy is not a feature - it's the foundation.
 
 **Last Updated**: 2025-12-05
 **Version**: 2.0 (Privacy-First)

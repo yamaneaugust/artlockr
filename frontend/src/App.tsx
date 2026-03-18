@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Layout from './components/Layout'
+import Homepage from './pages/Homepage'
 import Marketplace from './pages/Marketplace'
 import ListingDetail from './pages/ListingDetail'
 import Upload from './pages/Upload'
@@ -15,9 +16,9 @@ function App() {
     <Router>
       <Toaster position="top-right" />
       <Routes>
+        <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/marketplace" replace />} />
           <Route path="marketplace" element={<Marketplace />} />
           <Route path="marketplace/:id" element={<ListingDetail />} />
           <Route path="datasets" element={<PublicDatasets />} />

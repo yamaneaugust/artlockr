@@ -1,4 +1,4 @@
-# FAISS Vector Search for ArtLockr
+# FAISS Vector Search for ArtLock
 
 ## 🚀 Performance Breakthrough: 100,000x Faster Search!
 
@@ -27,7 +27,7 @@ FAISS is a library for efficient similarity search developed by Facebook AI Rese
 
 ## 🏗️ Index Types
 
-ArtLockr supports three FAISS index types:
+ArtLock supports three FAISS index types:
 
 ### 1. Flat (Default)
 ```python

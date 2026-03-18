@@ -2,7 +2,7 @@
 
 ## Overview
 
-ArtLockr is fully compliant with major privacy and data protection regulations:
+ArtLock is fully compliant with major privacy and data protection regulations:
 
 ✅ **GDPR** (General Data Protection Regulation) - European Union
 ✅ **CCPA** (California Consumer Privacy Act) - California, USA
@@ -67,7 +67,7 @@ RESULT: Zero image storage, full functionality
 
 ### Granular Consent System
 
-ArtLockr implements **8 types of consent**:
+ArtLock implements **8 types of consent**:
 
 | Consent Type | Required | Description | Can Withdraw |
 |--------------|----------|-------------|--------------|
@@ -524,7 +524,7 @@ Response:
   "version": "1.0",
   "last_updated": "2025-12-11",
   "url": "/legal_templates/TERMS_OF_SERVICE.md",
-  "summary": "Terms of Service governs your use of ArtLockr"
+  "summary": "Terms of Service governs your use of ArtLock"
 }
 ```
 
@@ -670,7 +670,7 @@ Response:
 
 ## Summary
 
-**ArtLockr Compliance:**
+**ArtLock Compliance:**
 
 ✅ **Full GDPR Compliance**
 - Granular consent management

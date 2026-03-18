@@ -1,4 +1,4 @@
-"""Initial database schema for ArtLockr
+"""Initial database schema for ArtLock
 
 Revision ID: 001
 Revises:

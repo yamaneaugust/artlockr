@@ -1,6 +1,6 @@
-# ArtLockr Deployment Guide
+# ArtLock Deployment Guide
 
-Complete deployment guide for ArtLockr AI-powered copyright detection system.
+Complete deployment guide for ArtLock AI-powered copyright detection system.
 
 ## Table of Contents
 
@@ -85,7 +85,7 @@ Frontend will be available at http://localhost:3000
 
 ### Docker Compose (Recommended for Development)
 
-The easiest way to run ArtLockr locally with all services:
+The easiest way to run ArtLock locally with all services:
 
 ```bash
 # Create .env file

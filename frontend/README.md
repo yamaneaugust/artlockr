@@ -1,6 +1,6 @@
-# ArtLockr Frontend
+# ArtLock Frontend
 
-Modern React + TypeScript frontend for ArtLockr, the AI-powered copyright detection system for artists.
+Modern React + TypeScript frontend for ArtLock, the AI-powered copyright detection system for artists.
 
 ## Features
 
@@ -178,4 +178,4 @@ Admin routes require admin role:
 
 ## License
 
-Copyright © 2024 ArtLockr. All rights reserved.
+Copyright © 2024 ArtLock. All rights reserved.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Database backup script for ArtLockr
+# Database backup script for ArtLock
 #
 # This script creates a PostgreSQL dump of the database
 # and backs up the data directory (features, indexes, etc.)
@@ -17,7 +17,7 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME=${1:-"backup_${TIMESTAMP}"}
 
 echo "=========================================="
-echo "ArtLockr Database Backup"
+echo "ArtLock Database Backup"
 echo "=========================================="
 echo ""
 
@@ -43,7 +43,7 @@ echo "✓ Data archived to: $BACKUP_DIR/${BACKUP_NAME}_data.tar.gz"
 echo ""
 echo "Creating backup manifest..."
 cat > "$BACKUP_DIR/${BACKUP_NAME}_manifest.txt" << EOF
-ArtLockr Backup Manifest
+ArtLock Backup Manifest
 ========================
 Backup Name: $BACKUP_NAME
 Created: $(date)

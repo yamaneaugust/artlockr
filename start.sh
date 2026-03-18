@@ -1,10 +1,10 @@
 #!/bin/bash
-# Quick start script for ArtLockr (without Docker)
+# Quick start script for ArtLock (without Docker)
 
 set -e
 
 echo "============================================"
-echo "ArtLockr Quick Start"
+echo "ArtLock Quick Start"
 echo "============================================"
 echo ""
 
@@ -134,7 +134,7 @@ sleep 5
 
 echo ""
 echo "============================================"
-echo -e "${GREEN}✓ ArtLockr is running!${NC}"
+echo -e "${GREEN}✓ ArtLock is running!${NC}"
 echo "============================================"
 echo ""
 echo "Frontend: http://localhost:3000"

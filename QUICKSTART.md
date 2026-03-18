@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get ArtLockr up and running in 5 minutes!
+Get ArtLock up and running in 5 minutes!
 
 ## Prerequisites
 

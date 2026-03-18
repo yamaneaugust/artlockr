@@ -1,5 +1,5 @@
 """
-Common Crawl scanner for ArtLockr.
+Common Crawl scanner for ArtLock.
 
 Searches Common Crawl index for publicly available creative works
 (images, audio, etc.) that can be indexed in the public dataset catalogue.

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title='ArtLockr Demo API')
+app = FastAPI(title='ArtLock Demo API')
 
 app.add_middleware(
     CORSMiddleware,

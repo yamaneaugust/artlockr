@@ -26,9 +26,9 @@ export default function Layout() {
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/marketplace" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <Palette className="h-7 w-7 text-violet-600" />
-              <span className="text-xl font-bold text-gray-900">ArtLockr</span>
+              <span className="text-xl font-bold text-gray-900">ArtLock</span>
             </Link>
 
             <div className="hidden md:flex items-center space-x-1">

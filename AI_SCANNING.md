@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Scanning system is the **core operational component** of ArtLockr. It scans directories of AI-generated images, extracts features, builds searchable indexes, and detects copyright infringement.
+The AI Scanning system is the **core operational component** of ArtLock. It scans directories of AI-generated images, extracts features, builds searchable indexes, and detects copyright infringement.
 
 **Complete Workflow:**
 ```

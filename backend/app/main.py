@@ -1,5 +1,5 @@
 """
-ArtLockr – Creative Data Marketplace
+ArtLock – Creative Data Marketplace
 
 A platform where artists sell licensed creative works to AI companies.
 Artists connect via Stripe Connect; companies pay via Stripe Checkout.
@@ -14,10 +14,10 @@ from backend.app.api.stripe_endpoints import router as stripe_router
 from backend.app.api.profile_endpoints import router as profile_router
 
 app = FastAPI(
-    title="ArtLockr – Creative Data Marketplace",
+    title="ArtLock – Creative Data Marketplace",
     version="2.0.0",
     description="""
-    ArtLockr connects artists with AI companies so that creative works can be
+    ArtLock connects artists with AI companies so that creative works can be
     legally licensed as training data.
 
     **Artists** upload images, audio, video, and text; set license terms and prices;
@@ -61,7 +61,7 @@ app.include_router(stripe_router)
 @app.get("/", tags=["Meta"])
 async def root():
     return {
-        "name": "ArtLockr Creative Marketplace",
+        "name": "ArtLock Creative Marketplace",
         "version": "2.0.0",
         "status": "operational",
         "docs": "/docs",

@@ -62,6 +62,6 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => set({ user, isAuthenticated: true }),
     }),
-    { name: 'artlockr-auth' },
+    { name: 'artlock-auth' },
   ),
 )

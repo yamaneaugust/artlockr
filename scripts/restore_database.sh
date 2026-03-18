@@ -1,5 +1,5 @@
 #!/bin/bash
-# Database restore script for ArtLockr
+# Database restore script for ArtLock
 #
 # This script restores a PostgreSQL database dump
 # and restores the data directory from backup
@@ -34,7 +34,7 @@ if [ ! -f "$BACKUP_DIR/${BACKUP_NAME}.dump" ]; then
 fi
 
 echo "=========================================="
-echo "ArtLockr Database Restore"
+echo "ArtLock Database Restore"
 echo "=========================================="
 echo ""
 echo "⚠️  WARNING: This will REPLACE the current database!"

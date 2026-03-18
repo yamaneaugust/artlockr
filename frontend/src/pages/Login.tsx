@@ -53,7 +53,7 @@ export default function Login() {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="flex flex-col items-center mb-8">
           <Palette className="h-10 w-10 text-violet-600 mb-2" />
-          <h1 className="text-2xl font-bold text-gray-900">ArtLockr</h1>
+          <h1 className="text-2xl font-bold text-gray-900">ArtLock</h1>
           <p className="text-sm text-gray-500 mt-1">Creative Data Marketplace</p>
         </div>
 

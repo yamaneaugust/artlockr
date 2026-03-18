@@ -292,7 +292,7 @@ class CryptographicProofService:
             Verification certificate
         """
         return {
-            'certificate_type': 'ArtLockr Ownership Proof',
+            'certificate_type': 'ArtLock Ownership Proof',
             'artwork_id': artwork_id,
             'artist_id': artist_id,
             'upload_timestamp': timestamp.isoformat(),

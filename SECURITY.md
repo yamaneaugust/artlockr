@@ -2,7 +2,7 @@
 
 ## Overview
 
-ArtLockr implements **enterprise-grade security** with multiple layers of protection against:
+ArtLock implements **enterprise-grade security** with multiple layers of protection against:
 - API abuse and scraping
 - Adversarial attacks on the ML model
 - Copyright infringement through unauthorized access
@@ -27,7 +27,7 @@ ArtLockr implements **enterprise-grade security** with multiple layers of protec
 
 ## Multi-Layer Security Architecture
 
-ArtLockr uses **5 layers of defense**:
+ArtLock uses **5 layers of defense**:
 
 ```
 ┌─────────────────────────────────────────┐
@@ -136,7 +136,7 @@ Response:
 
 ### Three-Tier Rate Limiting
 
-ArtLockr implements rate limiting at **3 levels**:
+ArtLock implements rate limiting at **3 levels**:
 
 | Level | Limit | Window | Use Case |
 |-------|-------|--------|----------|
@@ -300,7 +300,7 @@ Response:
 
 ### Threat Model
 
-ArtLockr defends against **5 types of AI attacks**:
+ArtLock defends against **5 types of AI attacks**:
 
 1. **FGSM** (Fast Gradient Sign Method)
 2. **PGD** (Projected Gradient Descent)
@@ -508,7 +508,7 @@ HTTP 403 Forbidden
 
 ### Beyond User Agents
 
-Traditional API protection relies on User-Agent headers, which are **easily spoofed**. ArtLockr uses **advanced verification**.
+Traditional API protection relies on User-Agent headers, which are **easily spoofed**. ArtLock uses **advanced verification**.
 
 ### Verification Methods
 
@@ -752,7 +752,7 @@ Request → IP Reputation → Rate Limit → Behavioral → Verification → AI 
 
 ## Summary
 
-ArtLockr provides **enterprise-grade security** with:
+ArtLock provides **enterprise-grade security** with:
 
 ✅ **IP Reputation System** - Scores and blocks malicious IPs
 ✅ **Multi-Tier Rate Limiting** - Per IP, user, and API key

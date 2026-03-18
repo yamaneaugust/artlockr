@@ -1,10 +1,10 @@
-# ArtLockr Database Documentation
+# ArtLock Database Documentation
 
-Complete database setup, migration, and maintenance guide for ArtLockr.
+Complete database setup, migration, and maintenance guide for ArtLock.
 
 ## Overview
 
-ArtLockr uses **PostgreSQL** as its primary database with **Alembic** for schema migrations. The database stores user accounts, artwork metadata, AI image data, detection results, and compliance records.
+ArtLock uses **PostgreSQL** as its primary database with **Alembic** for schema migrations. The database stores user accounts, artwork metadata, AI image data, detection results, and compliance records.
 
 ### Key Features
 

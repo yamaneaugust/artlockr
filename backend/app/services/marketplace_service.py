@@ -1,6 +1,6 @@
 """
 Marketplace service – business logic for browsing, listing, and purchasing
-creative works on the ArtLockr data marketplace.
+creative works on the ArtLock data marketplace.
 """
 
 from sqlalchemy.orm import Session

@@ -1,5 +1,5 @@
 """
-Stripe service for ArtLockr marketplace.
+Stripe service for ArtLock marketplace.
 
 Handles:
 - Stripe Connect onboarding for artists (to receive payouts)
@@ -114,7 +114,7 @@ def create_checkout_session(
                     "currency": "usd",
                     "product_data": {
                         "name": listing_title,
-                        "description": "Creative data license – ArtLockr Marketplace",
+                        "description": "Creative data license – ArtLock Marketplace",
                     },
                     "unit_amount": price_cents,
                 },

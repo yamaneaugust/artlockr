@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Database initialization script for ArtLockr.
+Database initialization script for ArtLock.
 
 This script:
 1. Creates the PostgreSQL database if it doesn't exist
@@ -234,7 +234,7 @@ def load_seed_data():
 def main():
     """Main initialization function."""
     parser = argparse.ArgumentParser(
-        description='Initialize ArtLockr database'
+        description='Initialize ArtLock database'
     )
     parser.add_argument(
         '--seed-data',
@@ -259,7 +259,7 @@ def main():
             sys.exit(0)
 
     print("=" * 60)
-    print("ArtLockr Database Initialization")
+    print("ArtLock Database Initialization")
     print("=" * 60)
 
     # Step 1: Create database

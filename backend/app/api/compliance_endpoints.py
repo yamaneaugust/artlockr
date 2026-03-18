@@ -511,7 +511,7 @@ async def get_terms_of_service():
         "version": "1.0",
         "last_updated": "2025-12-11",
         "url": "/legal_templates/TERMS_OF_SERVICE.md",
-        "summary": "Terms of Service governs your use of ArtLockr"
+        "summary": "Terms of Service governs your use of ArtLock"
     }
 
 

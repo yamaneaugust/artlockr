@@ -1,7 +1,7 @@
 {
-  "name": "artlockr-frontend",
+  "name": "artlock-frontend",
   "version": "1.0.0",
-  "description": "ArtLockr - AI-Powered Copyright Detection for Artists",
+  "description": "ArtLock - AI-Powered Copyright Detection for Artists",
   "private": true,
   "scripts": {
     "dev": "vite",

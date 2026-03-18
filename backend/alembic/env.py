@@ -1,4 +1,4 @@
-"""Alembic environment configuration for ArtLockr database migrations."""
+"""Alembic environment configuration for ArtLock database migrations."""
 
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool

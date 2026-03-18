@@ -2,7 +2,7 @@
 
 ## Overview
 
-ArtLockr uses **multi-metric similarity fusion** to achieve **~95% accuracy** in copyright detection, a significant improvement over the standard cosine similarity approach (~85% accuracy).
+ArtLock uses **multi-metric similarity fusion** to achieve **~95% accuracy** in copyright detection, a significant improvement over the standard cosine similarity approach (~85% accuracy).
 
 Instead of relying solely on ResNet feature cosine similarity, the system combines **5 complementary similarity metrics** to provide a more robust and accurate detection of copyright infringement.
 

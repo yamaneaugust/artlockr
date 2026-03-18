@@ -8,7 +8,7 @@
 
 ## 1. Acceptance of Terms
 
-By accessing or using ArtLockr ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service.
+By accessing or using ArtLock ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service.
 
 ### 1.1 Eligibility
 
@@ -25,7 +25,7 @@ You must be at least 13 years old to use this Service. Users between 13-18 requi
 
 ## 2. Service Description
 
-ArtLockr provides AI-powered copyright detection services for artists:
+ArtLock provides AI-powered copyright detection services for artists:
 
 - Upload and store artwork (feature vectors only, by default)
 - Detect potential copyright infringement in AI-generated content
@@ -50,7 +50,7 @@ ArtLockr provides AI-powered copyright detection services for artists:
 
 ### 3.2 License Grant
 
-By uploading artwork, you grant ArtLockr a limited, non-exclusive, royalty-free license to:
+By uploading artwork, you grant ArtLock a limited, non-exclusive, royalty-free license to:
 
 - Extract feature vectors from Your Content
 - Store feature vectors for copyright detection
@@ -284,7 +284,7 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW:
 
 ### 10.4 Indemnification
 
-You agree to indemnify and hold harmless ArtLockr from:
+You agree to indemnify and hold harmless ArtLock from:
 
 - Your violations of these Terms
 - Your Content
@@ -368,7 +368,7 @@ Continued use after changes constitute acceptance. If you disagree, you must sto
 
 ### 14.1 Entire Agreement
 
-These Terms constitute the entire agreement between you and ArtLockr.
+These Terms constitute the entire agreement between you and ArtLock.
 
 ### 14.2 Severability
 

@@ -1,5 +1,5 @@
 """
-Example usage of the ArtLockr API.
+Example usage of the ArtLock API.
 Demonstrates the basic workflow for copyright detection.
 """
 import requests
@@ -115,7 +115,7 @@ def get_statistics():
 def main():
     """Main example workflow"""
     print("=" * 60)
-    print("ArtLockr - Copyright Detection Example")
+    print("ArtLock - Copyright Detection Example")
     print("=" * 60)
 
     # Example 1: Upload artwork
