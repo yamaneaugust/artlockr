@@ -1,256 +1,292 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload as UploadIcon, X, CheckCircle2, AlertCircle } from 'lucide-react'
-import { api } from '../services/api'
+import { Upload as UploadIcon, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { uploadWork, createListing } from '../services/api'
+import { useAuthStore } from '../store/authStore'
 
-const ART_STYLES = [
-  { value: 'photorealistic', label: 'Photorealistic', threshold: 0.90 },
-  { value: 'digital_art', label: 'Digital Art', threshold: 0.85 },
-  { value: 'painting', label: 'Traditional Painting', threshold: 0.85 },
-  { value: 'illustration', label: 'Illustration', threshold: 0.82 },
-  { value: 'sketch', label: 'Sketch/Line Art', threshold: 0.78 },
-  { value: 'abstract', label: 'Abstract', threshold: 0.75 },
-  { value: 'pixel_art', label: 'Pixel Art', threshold: 0.88 },
-  { value: 'general', label: 'General (Auto)', threshold: 0.80 },
-]
-
-const COMPLEXITY_LEVELS = [
-  { value: 'simple', label: 'Simple', description: 'Minimal details, basic shapes' },
-  { value: 'medium', label: 'Medium', description: 'Moderate detail and complexity' },
-  { value: 'complex', label: 'Complex', description: 'Highly detailed, intricate' },
+const LICENSE_OPTIONS = [
+  { value: 'cc0', label: 'CC0 – Public Domain' },
+  { value: 'cc_by', label: 'CC-BY – Attribution required' },
+  { value: 'non_exclusive', label: 'Non-exclusive commercial license' },
+  { value: 'exclusive', label: 'Exclusive license (single buyer)' },
+  { value: 'custom', label: 'Custom license' },
 ]
 
 export default function Upload() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [artStyle, setArtStyle] = useState('general')
-  const [complexity, setComplexity] = useState('medium')
+  const { user } = useAuthStore()
+  const [file, setFile] = useState<File | null>(null)
+  const [step, setStep] = useState<'upload' | 'listing' | 'done'>('upload')
+  const [workId, setWorkId] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [listing, setListing] = useState(false)
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadSuccess(false)
+  const [meta, setMeta] = useState({
+    title: '',
+    description: '',
+    tags: '',
+    style: 'general',
+  })
 
-      // Create preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
+  const [listingForm, setListingForm] = useState({
+    title: '',
+    description: '',
+    price: '',
+    license_type: 'non_exclusive',
+    license_details: '',
+    max_buyers: '',
+  })
+
+  const onDrop = useCallback((accepted: File[]) => {
+    if (accepted[0]) setFile(accepted[0])
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    multiple: false,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+      'image/*': [],
+      'audio/*': [],
+      'video/*': [],
+      'text/plain': [],
+      'application/zip': [],
     },
-    maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
   })
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select a file first')
-      return
-    }
-
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!file || !user) return
     setUploading(true)
-
     try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-      formData.append('art_style', artStyle)
-      formData.append('complexity', complexity)
-
-      await api.uploadArtwork(formData)
-
-      toast.success('Artwork uploaded successfully! Features extracted and stored securely.')
-      setUploadSuccess(true)
-
-      // Reset form after 2 seconds
-      setTimeout(() => {
-        setSelectedFile(null)
-        setPreview(null)
-        setUploadSuccess(false)
-        setArtStyle('general')
-        setComplexity('medium')
-      }, 2000)
-    } catch (error) {
-      toast.error('Upload failed. Please try again.')
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('title', meta.title)
+      fd.append('description', meta.description)
+      fd.append('tags', meta.tags)
+      fd.append('style', meta.style)
+      fd.append('artist_id', String(user.id))
+      const { data } = await uploadWork(fd)
+      setWorkId(data.work_id)
+      setListingForm((f) => ({ ...f, title: meta.title }))
+      toast.success('Work uploaded!')
+      setStep('listing')
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Upload failed'
+      toast.error(msg)
     } finally {
       setUploading(false)
     }
   }
 
-  const removeFile = () => {
-    setSelectedFile(null)
-    setPreview(null)
-    setUploadSuccess(false)
+  const handleCreateListing = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!workId || !user) return
+    setListing(true)
+    try {
+      const fd = new FormData()
+      fd.append('work_id', String(workId))
+      fd.append('artist_id', String(user.id))
+      fd.append('title', listingForm.title)
+      fd.append('description', listingForm.description)
+      fd.append('price', listingForm.price)
+      fd.append('license_type', listingForm.license_type)
+      fd.append('license_details', listingForm.license_details)
+      if (listingForm.max_buyers) fd.append('max_buyers', listingForm.max_buyers)
+      await createListing(fd)
+      toast.success('Listing created!')
+      setStep('done')
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Failed to create listing'
+      toast.error(msg)
+    } finally {
+      setListing(false)
+    }
   }
 
-  const selectedStyleInfo = ART_STYLES.find((s) => s.value === artStyle)
+  if (step === 'done') {
+    return (
+      <div className="max-w-lg mx-auto text-center py-20">
+        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900">Listing live!</h2>
+        <p className="text-gray-500 mt-2">Your work is now listed on the marketplace.</p>
+        <button
+          onClick={() => {
+            setStep('upload')
+            setFile(null)
+            setWorkId(null)
+          }}
+          className="mt-6 px-6 py-2.5 bg-violet-600 text-white rounded-lg font-medium hover:bg-violet-700"
+        >
+          Upload another
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Upload Artwork</h1>
-        <p className="mt-2 text-gray-600">
-          Upload your original artwork to protect it with AI-powered copyright detection
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-8">
+      <h1 className="text-2xl font-bold text-gray-900">
+        {step === 'upload' ? 'Upload Creative Work' : 'Create Listing'}
+      </h1>
 
-      {/* Privacy Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex">
-          <CheckCircle2 className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
-            <p className="font-medium mb-1">Privacy-First Storage</p>
-            <p>
-              Your image is processed immediately to extract 2048-dimensional features, then
-              permanently deleted. Only mathematical features are stored - never the original image.
-              You retain full ownership and can delete your data at any time.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Upload Area */}
-      <div className="card">
-        {!selectedFile ? (
+      {step === 'upload' && (
+        <form onSubmit={handleUpload} className="space-y-6">
+          {/* Dropzone */}
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+            className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
               isDragActive
-                ? 'border-primary-500 bg-primary-50'
-                : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                ? 'border-violet-500 bg-violet-50'
+                : file
+                ? 'border-green-400 bg-green-50'
+                : 'border-gray-300 hover:border-violet-400'
             }`}
           >
             <input {...getInputProps()} />
-            <UploadIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-lg font-medium text-gray-900 mb-2">
-              {isDragActive ? 'Drop your artwork here' : 'Drag & drop your artwork'}
-            </p>
-            <p className="text-sm text-gray-600">
-              or click to browse (PNG, JPG, GIF, WebP up to 10MB)
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Preview */}
-            <div className="relative">
-              <img
-                src={preview!}
-                alt="Preview"
-                className="w-full h-96 object-contain rounded-lg bg-gray-100"
-              />
-              <button
-                onClick={removeFile}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* File Info */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                <p className="text-sm text-gray-600">
-                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+            <UploadIcon className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+            {file ? (
+              <p className="text-sm font-medium text-green-700">{file.name}</p>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-gray-700">
+                  Drop your file here or click to browse
                 </p>
-              </div>
-              {uploadSuccess && (
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
-              )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Images, audio, video, text, or ZIP datasets
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="grid gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <input
+                required
+                value={meta.title}
+                onChange={(e) => setMeta((m) => ({ ...m, title: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+              />
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Configuration */}
-      {selectedFile && !uploadSuccess && (
-        <div className="card space-y-6">
-          <h2 className="text-xl font-bold text-gray-900">Artwork Configuration</h2>
-
-          {/* Art Style */}
-          <div>
-            <label className="label">Art Style</label>
-            <select
-              value={artStyle}
-              onChange={(e) => setArtStyle(e.target.value)}
-              className="input"
-            >
-              {ART_STYLES.map((style) => (
-                <option key={style.value} value={style.value}>
-                  {style.label} (Threshold: {(style.threshold * 100).toFixed(0)}%)
-                </option>
-              ))}
-            </select>
-            <p className="mt-2 text-sm text-gray-600">
-              Detection threshold: {((selectedStyleInfo?.threshold || 0.8) * 100).toFixed(0)}%
-              similarity required for a match
-            </p>
-          </div>
-
-          {/* Complexity */}
-          <div>
-            <label className="label">Artwork Complexity</label>
-            <div className="grid grid-cols-3 gap-4">
-              {COMPLEXITY_LEVELS.map((level) => (
-                <button
-                  key={level.value}
-                  onClick={() => setComplexity(level.value)}
-                  className={`p-4 border-2 rounded-lg text-left transition-colors ${
-                    complexity === level.value
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900">{level.label}</p>
-                  <p className="text-sm text-gray-600 mt-1">{level.description}</p>
-                </button>
-              ))}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                rows={3}
+                value={meta.description}
+                onChange={(e) => setMeta((m) => ({ ...m, description: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags (comma-separated)
+              </label>
+              <input
+                value={meta.tags}
+                onChange={(e) => setMeta((m) => ({ ...m, tags: e.target.value }))}
+                placeholder="portrait, oil painting, landscape"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+              />
             </div>
           </div>
 
-          {/* Upload Button */}
           <button
-            onClick={handleUpload}
-            disabled={uploading}
-            className="btn-primary w-full py-3 text-lg"
+            type="submit"
+            disabled={!file || uploading}
+            className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
           >
-            {uploading ? 'Uploading and Processing...' : 'Upload & Protect Artwork'}
+            {uploading ? 'Uploading…' : 'Upload & continue'}
           </button>
-        </div>
+        </form>
       )}
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
-          <h3 className="font-medium text-gray-900 mb-2">Feature Extraction</h3>
-          <p className="text-sm text-gray-600">
-            ResNet deep learning model extracts 2048 unique features from your artwork
-          </p>
-        </div>
-        <div className="card">
-          <h3 className="font-medium text-gray-900 mb-2">Instant Deletion</h3>
-          <p className="text-sm text-gray-600">
-            Original image deleted immediately after processing - only features stored
-          </p>
-        </div>
-        <div className="card">
-          <h3 className="font-medium text-gray-900 mb-2">Cryptographic Proof</h3>
-          <p className="text-sm text-gray-600">
-            SHA-256 hash proof generated to verify your ownership timestamp
-          </p>
-        </div>
-      </div>
+      {step === 'listing' && (
+        <form onSubmit={handleCreateListing} className="space-y-5">
+          <div className="grid gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Listing title *</label>
+              <input
+                required
+                value={listingForm.title}
+                onChange={(e) => setListingForm((f) => ({ ...f, title: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                rows={3}
+                value={listingForm.description}
+                onChange={(e) => setListingForm((f) => ({ ...f, description: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price (USD) *</label>
+                <input
+                  required
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={listingForm.price}
+                  onChange={(e) => setListingForm((f) => ({ ...f, price: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max buyers</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Unlimited"
+                  value={listingForm.max_buyers}
+                  onChange={(e) => setListingForm((f) => ({ ...f, max_buyers: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">License type *</label>
+              <select
+                value={listingForm.license_type}
+                onChange={(e) => setListingForm((f) => ({ ...f, license_type: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                {LICENSE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                License details / terms
+              </label>
+              <textarea
+                rows={2}
+                value={listingForm.license_details}
+                onChange={(e) =>
+                  setListingForm((f) => ({ ...f, license_details: e.target.value }))
+                }
+                placeholder="Any specific restrictions or permissions…"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={listing}
+            className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+          >
+            {listing ? 'Creating listing…' : 'Publish listing'}
+          </button>
+        </form>
+      )}
     </div>
   )
 }

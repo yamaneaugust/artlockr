@@ -1,218 +1,231 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Upload, Image, AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react'
-import { api } from '../services/api'
+import { Upload, CreditCard, TrendingUp, CheckCircle, ExternalLink, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-
-interface ArtworkStats {
-  total_artworks: number
-  scans_performed: number
-  matches_found: number
-  protected_artworks: number
-}
-
-interface RecentMatch {
-  id: string
-  artwork_title: string
-  similarity: number
-  detected_at: string
-  ai_image_source: string
-}
+import { getArtistProfile, getCompanyProfile, startStripeOnboarding, getStripeStatus } from '../services/api'
+import { useAuthStore } from '../store/authStore'
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<ArtworkStats>({
-    total_artworks: 0,
-    scans_performed: 0,
-    matches_found: 0,
-    protected_artworks: 0,
-  })
-  const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
+  const { user, setUser } = useAuthStore()
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
+  const [onboarding, setOnboarding] = useState(false)
 
   useEffect(() => {
-    loadDashboardData()
-  }, [])
+    if (!user) return
+    const fetch = user.role === 'artist' ? getArtistProfile : getCompanyProfile
+    fetch(user.id)
+      .then(({ data }) => setProfile(data))
+      .catch(() => null)
+      .finally(() => setLoading(false))
+  }, [user])
 
-  const loadDashboardData = async () => {
+  const handleStripeOnboard = async () => {
+    if (!user) return
+    setOnboarding(true)
     try {
-      // TODO: Replace with actual API calls when backend endpoints are ready
-      // Simulating data for now
-      setTimeout(() => {
-        setStats({
-          total_artworks: 12,
-          scans_performed: 45,
-          matches_found: 3,
-          protected_artworks: 12,
-        })
-        setRecentMatches([
-          {
-            id: '1',
-            artwork_title: 'Sunset Landscape',
-            similarity: 0.94,
-            detected_at: new Date().toISOString(),
-            ai_image_source: 'MidJourney Gallery',
-          },
-          {
-            id: '2',
-            artwork_title: 'Abstract Portrait',
-            similarity: 0.87,
-            detected_at: new Date().toISOString(),
-            ai_image_source: 'Stable Diffusion Community',
-          },
-        ])
-        setLoading(false)
-      }, 1000)
-    } catch (error) {
-      toast.error('Failed to load dashboard data')
-      setLoading(false)
+      const { data } = await startStripeOnboarding(user.id)
+      window.location.href = data.onboarding_url
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Stripe error'
+      toast.error(msg)
+      setOnboarding(false)
     }
   }
 
-  const statCards = [
-    {
-      name: 'Total Artworks',
-      value: stats.total_artworks,
-      icon: Image,
-      color: 'bg-blue-500',
-      change: '+2 this month',
-    },
-    {
-      name: 'Scans Performed',
-      value: stats.scans_performed,
-      icon: Shield,
-      color: 'bg-green-500',
-      change: '+12 this week',
-    },
-    {
-      name: 'Matches Found',
-      value: stats.matches_found,
-      icon: AlertTriangle,
-      color: 'bg-yellow-500',
-      change: stats.matches_found > 0 ? 'Action required' : 'All clear',
-    },
-    {
-      name: 'Protected Works',
-      value: stats.protected_artworks,
-      icon: CheckCircle2,
-      color: 'bg-primary-500',
-      change: '100% coverage',
-    },
-  ]
+  const checkStripeStatus = async () => {
+    if (!user) return
+    try {
+      const { data } = await getStripeStatus(user.id)
+      if (data.onboarded) {
+        setUser({ ...user, stripe_onboarded: true })
+        toast.success('Stripe account verified!')
+      } else {
+        toast('Onboarding not yet complete', { icon: 'ℹ️' })
+      }
+    } catch {
+      toast.error('Could not check Stripe status')
+    }
+  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading dashboard...</div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Monitor your artwork protection and copyright detection status
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div key={stat.name} className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="mt-2 text-sm text-gray-500">{stat.change}</p>
-                </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.username}
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5 capitalize">{user?.role} account</p>
+        </div>
+        {user?.role === 'artist' && (
           <Link
             to="/upload"
-            className="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
           >
-            <Upload className="h-8 w-8 text-primary-600 mr-3" />
-            <div>
-              <p className="font-medium text-gray-900">Upload Artwork</p>
-              <p className="text-sm text-gray-600">Protect new artwork</p>
-            </div>
+            <Upload className="h-4 w-4" />
+            Upload work
           </Link>
-
+        )}
+        {user?.role === 'company' && (
           <Link
-            to="/results"
-            className="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+            to="/marketplace"
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
           >
-            <Shield className="h-8 w-8 text-primary-600 mr-3" />
-            <div>
-              <p className="font-medium text-gray-900">View Results</p>
-              <p className="text-sm text-gray-600">Check detection results</p>
-            </div>
+            Browse marketplace
           </Link>
-
-          <Link
-            to="/privacy"
-            className="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
-          >
-            <TrendingUp className="h-8 w-8 text-primary-600 mr-3" />
-            <div>
-              <p className="font-medium text-gray-900">Privacy Settings</p>
-              <p className="text-sm text-gray-600">Manage your data</p>
-            </div>
-          </Link>
-        </div>
+        )}
       </div>
 
-      {/* Recent Matches */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Copyright Matches</h2>
-        {recentMatches.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
-            <p>No copyright matches detected</p>
-            <p className="text-sm mt-1">Your artwork is protected</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {recentMatches.map((match) => (
-              <div
-                key={match.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-4">
-                  <AlertTriangle className="h-6 w-6 text-yellow-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">{match.artwork_title}</p>
-                    <p className="text-sm text-gray-600">{match.ai_image_source}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-red-600">
-                    {(match.similarity * 100).toFixed(1)}% match
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(match.detected_at).toLocaleDateString()}
-                  </p>
-                </div>
+      {/* Artist dashboard */}
+      {user?.role === 'artist' && profile && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Active listings', value: profile.listing_count as number },
+              { label: 'Total sales', value: profile.total_sales as number },
+              {
+                label: 'Earnings',
+                value: `$${((profile.total_earnings as number) ?? 0).toFixed(2)}`,
+              },
+            ].map((s) => (
+              <div key={s.label} className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-violet-700">{s.value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
-        )}
-      </div>
+
+          {/* Stripe Connect */}
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Payment setup</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Connect Stripe to receive payouts when your work is purchased.
+                </p>
+              </div>
+              {user.stripe_onboarded ? (
+                <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
+                  <CheckCircle className="h-4 w-4" />
+                  Connected
+                </span>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={checkStripeStatus}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Check status
+                  </button>
+                  <button
+                    onClick={handleStripeOnboard}
+                    disabled={onboarding}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 disabled:opacity-60 transition-colors"
+                  >
+                    {onboarding ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ExternalLink className="h-4 w-4" />
+                    )}
+                    Set up Stripe
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent listings */}
+          {Array.isArray(profile.listings) && (profile.listings as unknown[]).length > 0 && (
+            <div className="bg-white rounded-xl border p-6">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">Your listings</h2>
+              <div className="space-y-3">
+                {(profile.listings as Record<string, unknown>[]).map((l) => (
+                  <Link
+                    key={l.id as number}
+                    to={`/marketplace/${l.id}`}
+                    className="flex items-center justify-between hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{l.title as string}</p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {(l.license_type as string).replace('_', ' ')} · {l.work_type as string}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-violet-700">
+                      ${(l.price as number).toFixed(2)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Company dashboard */}
+      {user?.role === 'company' && profile && (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Purchases', value: profile.total_purchases as number, icon: CreditCard },
+              {
+                label: 'Total spent',
+                value: `$${((profile.total_spent as number) ?? 0).toFixed(2)}`,
+                icon: TrendingUp,
+              },
+            ].map((s) => (
+              <div key={s.label} className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-violet-700">{s.value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {Array.isArray(profile.recent_purchases) &&
+            (profile.recent_purchases as unknown[]).length > 0 && (
+              <div className="bg-white rounded-xl border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-semibold text-gray-900">Recent purchases</h2>
+                  <Link
+                    to="/purchases"
+                    className="text-sm text-violet-600 hover:underline"
+                  >
+                    View all
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {(profile.recent_purchases as Record<string, unknown>[]).map((p) => (
+                    <div key={p.id as number} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {p.listing_title as string}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {(p.license_type as string).replace('_', ' ')} ·{' '}
+                          {new Date(p.purchased_at as string).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-violet-700">
+                        ${(p.amount as number).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+        </>
+      )}
     </div>
   )
 }

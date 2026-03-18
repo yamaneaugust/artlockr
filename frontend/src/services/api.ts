@@ -1,147 +1,87 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { useAuthStore } from '../store/authStore'
+import axios, { AxiosInstance } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-class ApiClient {
-  private client: AxiosInstance
+const http: AxiosInstance = axios.create({ baseURL: BASE })
 
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+// ── Auth / Profiles ───────────────────────────────────────────────────────────
 
-    // Add auth token to requests
-    this.client.interceptors.request.use((config) => {
-      const token = useAuthStore.getState().token
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-      return config
-    })
+export const register = (
+  email: string,
+  username: string,
+  password: string,
+  role: 'artist' | 'company',
+  company_name?: string,
+) =>
+  http.post('/profiles/register', null, {
+    params: { email, username, password, role, company_name },
+  })
 
-    // Handle auth errors
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          useAuthStore.getState().logout()
-          window.location.href = '/login'
-        }
-        return Promise.reject(error)
-      }
-    )
-  }
+export const login = (email: string, password: string) =>
+  http.post('/profiles/login', null, { params: { email, password } })
 
-  // Artwork endpoints
-  async uploadArtwork(formData: FormData) {
-    return this.client.post('/upload-artwork-private', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-  }
+export const getArtistProfile = (userId: number) =>
+  http.get(`/profiles/artist/${userId}`)
 
-  async getArtworks() {
-    return this.client.get('/artworks')
-  }
+export const getCompanyProfile = (userId: number) =>
+  http.get(`/profiles/company/${userId}`)
 
-  async getArtwork(artworkId: string) {
-    return this.client.get(`/artworks/${artworkId}`)
-  }
+export const updateArtistProfile = (userId: number, data: Record<string, unknown>) =>
+  http.put(`/profiles/artist/${userId}`, null, { params: data })
 
-  async deleteArtwork(artworkId: string) {
-    return this.client.delete(`/artworks/${artworkId}`)
-  }
+export const updateCompanyProfile = (userId: number, data: Record<string, unknown>) =>
+  http.put(`/profiles/company/${userId}`, null, { params: data })
 
-  // Detection endpoints
-  async detectCopyright(artworkId: string, useMultiMetric = true) {
-    const endpoint = useMultiMetric
-      ? `/detect-copyright-multimetric/${artworkId}`
-      : `/detect-copyright-fast/${artworkId}`
-    return this.client.post(endpoint)
-  }
+// ── Marketplace ───────────────────────────────────────────────────────────────
 
-  async getDetectionResults(artworkId: string) {
-    return this.client.get(`/detection-results/${artworkId}`)
-  }
+export const getListings = (params?: Record<string, unknown>) =>
+  http.get('/marketplace/listings', { params })
 
-  // Privacy endpoints
-  async getMyData() {
-    return this.client.get('/privacy/my-data')
-  }
+export const getListing = (id: number) =>
+  http.get(`/marketplace/listings/${id}`)
 
-  async deleteAllData() {
-    return this.client.post('/privacy/delete-all')
-  }
+export const getStats = () =>
+  http.get('/marketplace/stats')
 
-  async verifyProof(proofHash: string) {
-    return this.client.get(`/privacy/verify-proof/${proofHash}`)
-  }
+export const uploadWork = (formData: FormData) =>
+  http.post('/marketplace/works/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 
-  // Consent endpoints
-  async grantConsent(consentType: string) {
-    return this.client.post('/consent/grant', { consent_type: consentType })
-  }
+export const createListing = (formData: FormData) =>
+  http.post('/marketplace/listings/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 
-  async grantBatchConsent(consentTypes: string[]) {
-    return this.client.post('/consent/grant-batch', { consent_types: consentTypes })
-  }
+export const purchaseListing = (listingId: number, buyerId: number) =>
+  http.post(`/marketplace/listings/${listingId}/purchase`, null, {
+    params: { buyer_id: buyerId },
+  })
 
-  async getConsentStatus() {
-    return this.client.get('/consent/status')
-  }
+export const getMyPurchases = (buyerId: number) =>
+  http.get('/marketplace/purchases', { params: { buyer_id: buyerId } })
 
-  async withdrawConsent(consentType: string) {
-    return this.client.post(`/consent/withdraw/${consentType}`)
-  }
+export const verifyLicense = (licenseKey: string) =>
+  http.get(`/marketplace/license/${licenseKey}`)
 
-  // Cookie endpoints
-  async getCookiePolicy() {
-    return this.client.get('/cookies/policy')
-  }
+// ── Public Datasets ───────────────────────────────────────────────────────────
 
-  async setCookiePreferences(preferences: Record<string, boolean>) {
-    return this.client.post('/cookies/preferences', { preferences })
-  }
+export const getPublicDatasets = (params?: Record<string, unknown>) =>
+  http.get('/marketplace/public-datasets', { params })
 
-  async getCookiePreferences() {
-    return this.client.get('/cookies/preferences')
-  }
+export const searchWikimedia = (q: string, limit = 20) =>
+  http.get('/marketplace/public-datasets/search/wikimedia', { params: { q, limit } })
 
-  // Security endpoints
-  async blockOrganization(organizationName: string, reason: string) {
-    return this.client.post('/block-organization', {
-      organization_name: organizationName,
-      reason,
-    })
-  }
+// ── Stripe ────────────────────────────────────────────────────────────────────
 
-  async getBlockedOrganizations() {
-    return this.client.get('/blocked-organizations')
-  }
+export const startStripeOnboarding = (userId: number) =>
+  http.post('/stripe/connect/onboard', null, { params: { user_id: userId } })
 
-  async getIPReputation(ip: string) {
-    return this.client.get(`/ip-reputation/${ip}`)
-  }
+export const getStripeStatus = (userId: number) =>
+  http.get('/stripe/connect/status', { params: { user_id: userId } })
 
-  async getSecurityAnalytics() {
-    return this.client.get('/security/analytics')
-  }
+export const getStripeDashboard = (userId: number) =>
+  http.get('/stripe/connect/dashboard', { params: { user_id: userId } })
 
-  // Admin endpoints
-  async getArtStyles() {
-    return this.client.get('/art-styles')
-  }
-
-  async getFAISSStats() {
-    return this.client.get('/faiss/index-stats')
-  }
-
-  async getComplianceDashboard() {
-    return this.client.get('/compliance/dashboard')
-  }
-}
-
-export const api = new ApiClient()
+export const createStripeCustomer = (userId: number) =>
+  http.post('/stripe/customer/create', null, { params: { user_id: userId } })

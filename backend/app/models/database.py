@@ -1,218 +1,271 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, JSON, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, JSON, Text, Numeric, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import enum
 
 Base = declarative_base()
 
 
-class Artist(Base):
-    """Artist/User model"""
-    __tablename__ = "artists"
+class UserRole(str, enum.Enum):
+    artist = "artist"
+    company = "company"
+    admin = "admin"
+
+
+class WorkType(str, enum.Enum):
+    image = "image"
+    audio = "audio"
+    video = "video"
+    text = "text"
+    dataset = "dataset"
+    other = "other"
+
+
+class LicenseType(str, enum.Enum):
+    cc0 = "cc0"                        # Public domain
+    cc_by = "cc_by"                    # Attribution
+    non_exclusive = "non_exclusive"    # Multiple buyers allowed
+    exclusive = "exclusive"            # Single buyer
+    custom = "custom"                  # Custom terms
+
+
+class ListingStatus(str, enum.Enum):
+    active = "active"
+    sold_exclusive = "sold_exclusive"
+    paused = "paused"
+    deleted = "deleted"
+
+
+class PurchaseStatus(str, enum.Enum):
+    pending = "pending"
+    completed = "completed"
+    refunded = "refunded"
+    disputed = "disputed"
+
+
+# ─────────────────────────────────────────
+# Core User Model
+# ─────────────────────────────────────────
+
+class User(Base):
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    api_key = Column(String, unique=True, index=True)
+    role = Column(String, default=UserRole.artist)   # artist | company | admin
     is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    avatar_url = Column(String)
+    bio = Column(Text)
+    website = Column(String)
+    location = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Privacy Settings
-    storage_mode = Column(String, default='features_only')  # 'features_only', 'encrypted', 'full'
-    auto_delete_images = Column(Boolean, default=True)  # Delete images after feature extraction
-    data_retention_days = Column(Integer, default=30)  # How long to keep feature data
-    consent_privacy_policy = Column(Boolean, default=False)  # GDPR/CCPA consent
-    consent_notifications = Column(Boolean, default=False)  # Email notification consent
-    consent_date = Column(DateTime)  # When consent was given
+    # Stripe
+    stripe_account_id = Column(String, unique=True)    # Stripe Connect (artists)
+    stripe_customer_id = Column(String, unique=True)   # Stripe Customer (companies)
+    stripe_onboarded = Column(Boolean, default=False)
+
+    # Privacy
+    consent_terms = Column(Boolean, default=False)
+    consent_date = Column(DateTime)
 
     # Relationships
-    artworks = relationship("Artwork", back_populates="artist")
-    api_gates = relationship("APIGate", back_populates="artist")
-    detection_results = relationship("DetectionResult", back_populates="artist")
-    privacy_settings = relationship("ArtistPrivacySettings", back_populates="artist", uselist=False)
+    artist_profile = relationship("ArtistProfile", back_populates="user", uselist=False)
+    company_profile = relationship("CompanyProfile", back_populates="user", uselist=False)
+    works = relationship("CreativeWork", back_populates="owner")
+    listings = relationship("Listing", back_populates="artist")
+    purchases = relationship("Purchase", back_populates="buyer")
 
 
-class Artwork(Base):
-    """Original artwork uploaded by artists"""
-    __tablename__ = "artworks"
+# ─────────────────────────────────────────
+# Artist Profile
+# ─────────────────────────────────────────
+
+class ArtistProfile(Base):
+    __tablename__ = "artist_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+
+    display_name = Column(String)
+    specialties = Column(JSON)       # ["photography", "music", "illustration"]
+    portfolio_url = Column(String)
+    social_links = Column(JSON)      # {"twitter": "...", "instagram": "..."}
+    total_earnings = Column(Numeric(12, 2), default=0)
+    total_sales = Column(Integer, default=0)
+    rating = Column(Float)           # Avg buyer rating
+    verified_artist = Column(Boolean, default=False)
+
+    # Relationships
+    user = relationship("User", back_populates="artist_profile")
+
+
+# ─────────────────────────────────────────
+# Company Profile
+# ─────────────────────────────────────────
+
+class CompanyProfile(Base):
+    __tablename__ = "company_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+
+    company_name = Column(String, nullable=False)
+    industry = Column(String)         # "AI Research", "Gaming", etc.
+    company_size = Column(String)     # startup / mid / enterprise
+    use_case = Column(Text)           # What they use data for
+    verified_company = Column(Boolean, default=False)
+    total_spent = Column(Numeric(12, 2), default=0)
+    total_purchases = Column(Integer, default=0)
+
+    # Relationships
+    user = relationship("User", back_populates="company_profile")
+
+
+# ─────────────────────────────────────────
+# Creative Works (multi-type: image/audio/video/text)
+# ─────────────────────────────────────────
+
+class CreativeWork(Base):
+    __tablename__ = "creative_works"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
     title = Column(String, nullable=False)
     description = Column(Text)
-    file_path = Column(String)  # Nullable now - may not store actual file
-    file_hash = Column(String, unique=True, index=True)  # SHA-256 hash
-    feature_path = Column(String)  # Path to extracted features (always stored)
-    upload_date = Column(DateTime, default=datetime.utcnow)
-    is_public = Column(Boolean, default=True)
-    metadata = Column(JSON)  # Store additional metadata
-
-    # Art Style & Detection Settings
-    art_style = Column(String, default='general')  # photorealistic, digital_art, abstract, etc.
-    complexity = Column(String, default='medium')  # simple, medium, complex
-    custom_threshold = Column(Float)  # Artist can override default threshold
-
-    # Privacy & Security
-    storage_mode = Column(String, default='features_only')  # How this artwork is stored
-    image_deleted = Column(Boolean, default=False)  # Was original image deleted?
-    image_deleted_date = Column(DateTime)  # When was image deleted
-    scheduled_deletion_date = Column(DateTime)  # Auto-delete on this date
-
-    # Cryptographic Proof
-    upload_proof_hash = Column(String)  # SHA-256(image + timestamp + artist_id)
-    upload_signature = Column(String)  # Cryptographic signature
-    blockchain_tx = Column(String)  # Optional: blockchain transaction ID
-
-    # Relationships
-    artist = relationship("Artist", back_populates="artworks")
-    detection_results = relationship("DetectionResult", back_populates="original_artwork")
-
-
-class AIGeneratedArt(Base):
-    """AI-generated artwork for comparison"""
-    __tablename__ = "ai_generated_art"
-
-    id = Column(Integer, primary_key=True, index=True)
-    source_url = Column(String)
-    source_platform = Column(String)  # e.g., "midjourney", "stable-diffusion", etc.
-    file_path = Column(String, nullable=False)
+    work_type = Column(String, nullable=False)   # image | audio | video | text | dataset
+    file_format = Column(String)                 # jpg, png, mp3, wav, mp4, txt, zip
+    file_size = Column(Integer)                  # bytes
+    duration = Column(Float)                     # seconds (audio/video)
     file_hash = Column(String, unique=True, index=True)
-    feature_path = Column(String)
-    model_used = Column(String)  # Which AI model generated it
-    prompt = Column(Text)  # If available
-    indexed_date = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON)
+    feature_path = Column(String)                # extracted ML features
+    preview_url = Column(String)                 # low-res/watermarked preview
 
+    # Metadata
+    tags = Column(JSON)                          # ["landscape", "nature", "digital"]
+    style = Column(String)                       # art style
+    dimensions = Column(String)                  # "1920x1080" for images/video
+    sample_rate = Column(Integer)                # Hz for audio
 
-class DetectionResult(Base):
-    """Results from copyright detection scans"""
-    __tablename__ = "detection_results"
+    # Origin
+    source = Column(String, default="upload")    # upload | common_crawl | public_dataset
+    source_url = Column(String)                  # original URL if from crawl
+    source_dataset = Column(String)              # dataset name
 
-    id = Column(Integer, primary_key=True, index=True)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
-    artwork_id = Column(Integer, ForeignKey("artworks.id"), nullable=False)
-    scan_date = Column(DateTime, default=datetime.utcnow)
-    total_scanned = Column(Integer, default=0)
-    matches_found = Column(Integer, default=0)
-    threshold_used = Column(Float, default=0.85)
+    # Privacy
+    image_deleted = Column(Boolean, default=False)
+    upload_proof_hash = Column(String)
 
-    # Relationships
-    artist = relationship("Artist", back_populates="detection_results")
-    original_artwork = relationship("Artwork", back_populates="detection_results")
-    matches = relationship("CopyrightMatch", back_populates="detection_result")
-
-
-class CopyrightMatch(Base):
-    """Individual copyright matches found during detection"""
-    __tablename__ = "copyright_matches"
-
-    id = Column(Integer, primary_key=True, index=True)
-    detection_result_id = Column(Integer, ForeignKey("detection_results.id"), nullable=False)
-    ai_artwork_id = Column(Integer, ForeignKey("ai_generated_art.id"))
-    ai_artwork_path = Column(String, nullable=False)
-    similarity_score = Column(Float, nullable=False)
-    is_confirmed = Column(Boolean, default=False)  # Artist confirmation
-    reported_date = Column(DateTime)
-    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    detection_result = relationship("DetectionResult", back_populates="matches")
+    owner = relationship("User", back_populates="works")
+    listing = relationship("Listing", back_populates="work", uselist=False)
 
+
+# ─────────────────────────────────────────
+# Marketplace Listings
+# ─────────────────────────────────────────
+
+class Listing(Base):
+    __tablename__ = "listings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    work_id = Column(Integer, ForeignKey("creative_works.id"), nullable=False)
+    artist_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    price = Column(Numeric(10, 2), nullable=False)        # USD
+    license_type = Column(String, nullable=False)         # cc0 | non_exclusive | exclusive | custom
+    license_details = Column(Text)                        # Custom license text
+    max_buyers = Column(Integer)                          # null = unlimited
+    status = Column(String, default=ListingStatus.active) # active | sold_exclusive | paused | deleted
+    featured = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    work = relationship("CreativeWork", back_populates="listing")
+    artist = relationship("User", back_populates="listings")
+    purchases = relationship("Purchase", back_populates="listing")
+
+
+# ─────────────────────────────────────────
+# Purchases
+# ─────────────────────────────────────────
+
+class Purchase(Base):
+    __tablename__ = "purchases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
+    buyer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    amount = Column(Numeric(10, 2), nullable=False)       # USD paid
+    platform_fee = Column(Numeric(10, 2))                 # 10% fee
+    seller_payout = Column(Numeric(10, 2))                # 90% to artist
+
+    # Stripe
+    stripe_payment_intent_id = Column(String, unique=True)
+    stripe_transfer_id = Column(String)                   # Transfer to artist
+    stripe_charge_id = Column(String)
+
+    status = Column(String, default=PurchaseStatus.pending)
+    license_key = Column(String, unique=True)             # Download/access key
+    download_url = Column(String)                         # Time-limited URL
+    download_expires_at = Column(DateTime)
+
+    purchased_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime)
+
+    # Relationships
+    listing = relationship("Listing", back_populates="purchases")
+    buyer = relationship("User", back_populates="purchases")
+
+
+# ─────────────────────────────────────────
+# Public Dataset Index (Common Crawl etc.)
+# ─────────────────────────────────────────
+
+class PublicDatasetEntry(Base):
+    __tablename__ = "public_dataset_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    url = Column(String, nullable=False, index=True)
+    content_type = Column(String)          # image/jpeg, audio/mp3, etc.
+    work_type = Column(String)             # image | audio | video | text
+    file_format = Column(String)
+    file_size = Column(Integer)
+    file_hash = Column(String, index=True)
+    dataset_source = Column(String)        # common_crawl | wikimedia | freesound
+    crawl_id = Column(String)              # CC crawl identifier
+    license_detected = Column(String)      # license found in page metadata
+    title_detected = Column(String)
+    author_detected = Column(String)
+    discovered_at = Column(DateTime, default=datetime.utcnow)
+    indexed = Column(Boolean, default=False)
+
+
+# ─────────────────────────────────────────
+# Backward-compat: keep original tables
+# ─────────────────────────────────────────
 
 class APIGate(Base):
-    """API gating rules for blocking organizations"""
     __tablename__ = "api_gates"
 
     id = Column(Integer, primary_key=True, index=True)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     organization_name = Column(String, nullable=False)
-    organization_domain = Column(String)  # e.g., "openai.com"
+    organization_domain = Column(String)
     is_blocked = Column(Boolean, default=True)
     block_reason = Column(Text)
     blocked_date = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON)
-
-    # Relationships
-    artist = relationship("Artist", back_populates="api_gates")
-    access_logs = relationship("AccessLog", back_populates="api_gate")
-
-
-class AccessLog(Base):
-    """Log of access attempts to artwork"""
-    __tablename__ = "access_logs"
-
-    id = Column(Integer, primary_key=True, index=True)
-    api_gate_id = Column(Integer, ForeignKey("api_gates.id"))
-    ip_address = Column(String)
-    user_agent = Column(String)
-    requested_artwork_id = Column(Integer, ForeignKey("artworks.id"))
-    access_granted = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON)
-
-    # Relationships
-    api_gate = relationship("APIGate", back_populates="access_logs")
-
-
-class ArtistPrivacySettings(Base):
-    """Detailed privacy settings and audit trail for artists"""
-    __tablename__ = "artist_privacy_settings"
-
-    id = Column(Integer, primary_key=True, index=True)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False, unique=True)
-
-    # Data Storage Preferences
-    prefer_features_only = Column(Boolean, default=True)
-    allow_image_caching = Column(Boolean, default=False)
-    allow_analytics = Column(Boolean, default=False)
-
-    # Notification Preferences
-    notify_on_match = Column(Boolean, default=True)
-    notify_on_scan = Column(Boolean, default=False)
-    notify_on_data_access = Column(Boolean, default=True)
-
-    # Data Export & Deletion
-    last_data_export = Column(DateTime)
-    data_export_count = Column(Integer, default=0)
-    deletion_requested = Column(Boolean, default=False)
-    deletion_request_date = Column(DateTime)
-    deletion_scheduled_date = Column(DateTime)
-
-    # Audit Trail
-    settings_updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    total_artworks_uploaded = Column(Integer, default=0)
-    total_images_deleted = Column(Integer, default=0)
-
-    # Relationships
-    artist = relationship("Artist", back_populates="privacy_settings")
-
-
-class UploadProof(Base):
-    """Cryptographic proof of artwork upload for ownership verification"""
-    __tablename__ = "upload_proofs"
-
-    id = Column(Integer, primary_key=True, index=True)
-    artwork_id = Column(Integer, ForeignKey("artworks.id"), nullable=False)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
-
-    # Cryptographic Data
-    file_hash = Column(String, nullable=False)  # SHA-256 of original file
-    proof_hash = Column(String, unique=True, index=True, nullable=False)  # Composite hash
-    signature = Column(String)  # Digital signature
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    # Blockchain Integration (optional)
-    blockchain_network = Column(String)  # ethereum, polygon, etc.
-    blockchain_tx_hash = Column(String)  # Transaction hash
-    blockchain_block_number = Column(Integer)  # Block number
-    blockchain_confirmed = Column(Boolean, default=False)
-
-    # Verification
-    verification_url = Column(String)  # Public URL to verify proof
-    is_verified = Column(Boolean, default=False)
-    verified_at = Column(DateTime)
-
-    # Metadata
-    proof_data = Column(JSON)  # Additional proof metadata

@@ -5,6 +5,9 @@ python-multipart==0.0.6
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
+# Payments
+stripe>=7.0.0
+
 # Database
 sqlalchemy==2.0.25
 asyncpg==0.29.0
