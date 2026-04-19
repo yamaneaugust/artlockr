@@ -17,12 +17,12 @@ from decimal import Decimal
 import hashlib, os, shutil
 from datetime import datetime
 
-from backend.app.models.database import (
+from app.models.database import (
     User, CreativeWork, Listing, Purchase,
     PublicDatasetEntry,
 )
-from backend.app.services import marketplace_service, common_crawl
-from backend.app.db.session import get_db
+from app.services import marketplace_service, common_crawl
+from app.db.session import get_db
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
 

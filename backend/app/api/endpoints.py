@@ -6,9 +6,9 @@ import hashlib
 import os
 from datetime import datetime
 
-from backend.app.db.session import get_db
-from backend.app.models.database import Artist, Artwork, DetectionResult, CopyrightMatch, APIGate, AccessLog
-from backend.app.core.config import settings
+from app.db.session import get_db
+from app.models.database import Artist, Artwork, DetectionResult, CopyrightMatch, APIGate, AccessLog
+from app.core.config import settings
 from ml_models.inference.copyright_detector import CopyrightDetector
 
 router = APIRouter()

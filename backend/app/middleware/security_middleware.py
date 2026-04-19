@@ -18,7 +18,7 @@ from starlette.responses import JSONResponse
 import time
 from typing import Callable
 
-from backend.app.services.security import (
+from app.services.security import (
     ip_reputation,
     rate_limiter,
     behavioral_detector,

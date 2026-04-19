@@ -9,9 +9,9 @@ Public dataset discovery via Common Crawl + Wikimedia.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api.marketplace_endpoints import router as marketplace_router
-from backend.app.api.stripe_endpoints import router as stripe_router
-from backend.app.api.profile_endpoints import router as profile_router
+from app.api.marketplace_endpoints import router as marketplace_router
+from app.api.stripe_endpoints import router as stripe_router
+from app.api.profile_endpoints import router as profile_router
 
 app = FastAPI(
     title="ArtLock – Creative Data Marketplace",

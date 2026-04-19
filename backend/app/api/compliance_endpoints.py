@@ -14,13 +14,13 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Dict
 from datetime import datetime
 
-from backend.app.services.compliance import (
+from app.services.compliance import (
     consent_manager,
     cookie_manager,
     age_verifier,
     ConsentType
 )
-from backend.app.services.watermarking import (
+from app.services.watermarking import (
     watermarking_policy,
     watermarking_service
 )

@@ -11,9 +11,9 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.orm import Session
 
-from backend.app.models.database import User
-from backend.app.services import stripe_service, marketplace_service
-from backend.app.db.session import get_db
+from app.models.database import User
+from app.services import stripe_service, marketplace_service
+from app.db.session import get_db
 
 router = APIRouter(prefix="/stripe", tags=["Stripe"])
 
@@ -155,7 +155,7 @@ async def stripe_webhook(
 
     elif event_type == "payment_intent.succeeded":
         details = stripe_service.handle_payment_intent_succeeded(data)
-        from backend.app.models.database import Purchase
+        from app.models.database import Purchase
         purchase = db.query(Purchase).filter(
             Purchase.stripe_payment_intent_id == details["stripe_payment_intent_id"]
         ).first()

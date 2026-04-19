@@ -9,13 +9,13 @@ import tempfile
 import os
 from datetime import datetime
 
-from backend.app.db.session import get_db
-from backend.app.models.database import (
+from app.db.session import get_db
+from app.models.database import (
     Artist, Artwork, UploadProof,
     ArtistPrivacySettings
 )
-from backend.app.core.config import settings
-from backend.app.services.privacy import PrivacyService, CryptographicProofService
+from app.core.config import settings
+from app.services.privacy import PrivacyService, CryptographicProofService
 from ml_models.inference.copyright_detector import CopyrightDetector
 
 router = APIRouter()

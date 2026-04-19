@@ -15,9 +15,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-from backend.app.db.session import get_db
-from backend.app.models.database import Artist, Artwork, DetectionResult
-from backend.app.services.security import (
+from app.db.session import get_db
+from app.models.database import Artist, Artwork, DetectionResult
+from app.services.security import (
     ip_reputation,
     rate_limiter,
     behavioral_detector,

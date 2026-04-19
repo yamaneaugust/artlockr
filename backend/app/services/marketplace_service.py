@@ -10,12 +10,12 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 import secrets
 
-from backend.app.models.database import (
+from app.models.database import (
     User, ArtistProfile, CompanyProfile,
     CreativeWork, Listing, Purchase,
     ListingStatus, PurchaseStatus,
 )
-from backend.app.services import stripe_service
+from app.services import stripe_service
 
 
 # ─────────────────────────────────────────

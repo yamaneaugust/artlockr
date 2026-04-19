@@ -13,11 +13,11 @@ import numpy as np
 import os
 from datetime import datetime
 
-from backend.app.db.session import get_db
-from backend.app.models.database import Artwork, DetectionResult, CopyrightMatch
-from backend.app.core.config import settings
-from backend.app.services.faiss_service import FAISSIndexManager
-from backend.app.services.multi_metric import MultiMetricSimilarity, ArtStyleThresholds
+from app.db.session import get_db
+from app.models.database import Artwork, DetectionResult, CopyrightMatch
+from app.core.config import settings
+from app.services.faiss_service import FAISSIndexManager
+from app.services.multi_metric import MultiMetricSimilarity, ArtStyleThresholds
 from ml_models.inference.copyright_detector import CopyrightDetector
 
 router = APIRouter()

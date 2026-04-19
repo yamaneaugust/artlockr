@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 import json
 
-from backend.app.core.config import settings
+from app.core.config import settings
 
 
 class PrivacyService:
