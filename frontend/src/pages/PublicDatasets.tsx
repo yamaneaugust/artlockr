@@ -183,7 +183,7 @@ export default function PublicDatasets() {
                     <p className="text-xs font-medium text-gray-900 line-clamp-2">
                       {r.title_detected as string}
                     </p>
-                    {r.license_detected && (
+                    {(r.license_detected as string | null) && (
                       <span className="text-xs text-green-600 mt-1 block">
                         {r.license_detected as string}
                       </span>

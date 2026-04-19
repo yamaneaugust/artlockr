@@ -106,7 +106,7 @@ export default function ListingDetail() {
             <div>
               <p className="text-sm font-medium text-gray-900">
                 {artist.display_name as string}
-                {artist.verified && <CheckCircle className="inline h-3.5 w-3.5 ml-1 text-violet-500" />}
+                {(artist.verified as boolean) && <CheckCircle className="inline h-3.5 w-3.5 ml-1 text-violet-500" />}
               </p>
               <p className="text-xs text-gray-500">{artist.total_sales as number} sales</p>
             </div>
@@ -120,7 +120,7 @@ export default function ListingDetail() {
                 {(listing.license_type as string).replace('_', ' ')}
               </span>
             </div>
-            {listing.max_buyers && (
+            {(listing.max_buyers as number | null) && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Copies available</span>
                 <span className="text-sm font-semibold">
@@ -128,7 +128,7 @@ export default function ListingDetail() {
                 </span>
               </div>
             )}
-            {listing.license_details && (
+            {(listing.license_details as string | null) && (
               <p className="text-xs text-gray-500">{listing.license_details as string}</p>
             )}
             <div className="border-t pt-3 flex items-center justify-between">
