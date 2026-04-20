@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Upload, Store, FileSearch, Plus, TrendingUp, Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
 import { getArtistProfile, getCompanyProfile } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
