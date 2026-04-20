@@ -1,20 +1,23 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Palette } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { login, register } = useAuthStore()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<'login' | 'register'>('register')
   const [loading, setLoading] = useState(false)
+
+  const initialRole = (searchParams.get('role') as 'artist' | 'company') || 'artist'
 
   const [form, setForm] = useState({
     email: '',
     username: '',
     password: '',
-    role: 'artist' as 'artist' | 'company',
+    role: initialRole,
     company_name: '',
   })
 
@@ -49,23 +52,23 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-blue-950 flex items-center justify-center p-4">
+      <div className="bg-blue-900 rounded-2xl shadow-xl w-full max-w-md p-8 border border-blue-800">
         <div className="flex flex-col items-center mb-8">
-          <Palette className="h-10 w-10 text-violet-600 mb-2" />
-          <h1 className="text-2xl font-bold text-gray-900">ArtLock</h1>
-          <p className="text-sm text-gray-500 mt-1">Creative Data Marketplace</p>
+          <Palette className="h-10 w-10 text-orange-500 mb-2" />
+          <h1 className="text-2xl font-bold text-white">ArtLock</h1>
+          <p className="text-sm text-blue-300 mt-1">Creative Data Marketplace</p>
         </div>
 
-        <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+        <div className="flex rounded-lg bg-blue-950 p-1 mb-6">
           {(['login', 'register'] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
               className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                 mode === m
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-blue-300 hover:text-white'
               }`}
             >
               {m === 'login' ? 'Sign in' : 'Create account'}
@@ -75,59 +78,73 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-blue-200 mb-1">Email</label>
             <input
               type="email"
               required
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
             />
           </div>
 
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-blue-200 mb-1">Username</label>
               <input
                 type="text"
                 required
                 value={form.username}
                 onChange={(e) => update('username', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-blue-200 mb-1">Password</label>
             <input
               type="password"
               required
               value={form.password}
               onChange={(e) => update('password', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
             />
           </div>
 
           {mode === 'register' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Account type
+                <label className="block text-sm font-medium text-blue-200 mb-2">
+                  I am a…
                 </label>
-                <select
-                  value={form.role}
-                  onChange={(e) => update('role', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none"
-                >
-                  <option value="artist">Artist – sell my creative work</option>
-                  <option value="company">Company – buy licensed datasets</option>
-                </select>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'artist', label: "Creator", sub: "sell my creative work" },
+                    { value: 'company', label: "AI Company", sub: "buy licensed datasets" },
+                  ].map(({ value, label, sub }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => update('role', value)}
+                      className={`p-3 rounded-lg border-2 text-left transition-colors ${
+                        form.role === value
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-blue-700 hover:border-blue-500'
+                      }`}
+                    >
+                      <p className={`text-sm font-semibold ${form.role === value ? 'text-orange-400' : 'text-white'}`}>
+                        {label}
+                      </p>
+                      <p className="text-xs text-blue-400 mt-0.5">{sub}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {form.role === 'company' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-blue-200 mb-1">
                     Company name
                   </label>
                   <input
@@ -135,7 +152,7 @@ export default function Login() {
                     required
                     value={form.company_name}
                     onChange={(e) => update('company_name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none"
+                    className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
                   />
                 </div>
               )}
@@ -145,15 +162,15 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
           >
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-blue-400">
           Or{' '}
-          <Link to="/marketplace" className="text-violet-600 hover:underline">
+          <Link to="/marketplace" className="text-orange-400 hover:text-orange-300 hover:underline">
             browse the marketplace without signing in
           </Link>
         </p>
