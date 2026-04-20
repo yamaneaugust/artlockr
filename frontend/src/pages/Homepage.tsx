@@ -222,7 +222,7 @@ export default function Homepage() {
               { icon: Search, title: 'Verify Datasets' },
               { icon: FileText, title: 'Generate Audit Reports' },
             ].map(({ icon: Icon, title }) => (
-              <div key={title} className="text-center group">
+              <Link key={title} to="/login" className="text-center group cursor-pointer">
                 <div className="mb-4 flex justify-center">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-600/30 to-orange-800/20 border-2 border-orange-500/40 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/20">
@@ -232,7 +232,7 @@ export default function Homepage() {
                   </div>
                 </div>
                 <h3 className="text-white font-medium text-sm">{title}</h3>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
