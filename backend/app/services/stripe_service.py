@@ -15,11 +15,12 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 from decimal import Decimal
+from app.core.config import settings
 
 
-# Initialize Stripe – key read from env at call time so tests can patch it
+# Initialize Stripe – key read from settings
 def _get_stripe():
-    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_placeholder")
+    stripe.api_key = settings.STRIPE_SECRET_KEY or "sk_test_placeholder"
     return stripe
 
 

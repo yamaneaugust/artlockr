@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload, CreditCard, TrendingUp, CheckCircle, ExternalLink, Loader2 } from 'lucide-react'
+import { Search, Upload, Store, FileSearch, Plus, TrendingUp, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { getArtistProfile, getCompanyProfile, startStripeOnboarding, getStripeStatus } from '../services/api'
+import { getArtistProfile, getCompanyProfile } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 export default function Dashboard() {
-  const { user, setUser } = useAuthStore()
+  const { user } = useAuthStore()
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
-  const [onboarding, setOnboarding] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -20,212 +19,248 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [user])
 
-  const handleStripeOnboard = async () => {
-    if (!user) return
-    setOnboarding(true)
-    try {
-      const { data } = await startStripeOnboarding(user.id)
-      window.location.href = data.onboarding_url
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        'Stripe error'
-      toast.error(msg)
-      setOnboarding(false)
-    }
-  }
-
-  const checkStripeStatus = async () => {
-    if (!user) return
-    try {
-      const { data } = await getStripeStatus(user.id)
-      if (data.onboarded) {
-        setUser({ ...user, stripe_onboarded: true })
-        toast.success('Stripe account verified!')
-      } else {
-        toast('Onboarding not yet complete', { icon: 'ℹ️' })
-      }
-    } catch {
-      toast.error('Could not check Stripe status')
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     )
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {user?.username}
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5 capitalize">{user?.role} account</p>
-        </div>
-        {user?.role === 'artist' && (
-          <Link
-            to="/upload"
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
-          >
-            <Upload className="h-4 w-4" />
-            Upload work
-          </Link>
-        )}
-        {user?.role === 'company' && (
-          <Link
-            to="/marketplace"
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
-          >
-            Browse marketplace
-          </Link>
-        )}
-      </div>
-
-      {/* Artist dashboard */}
-      {user?.role === 'artist' && profile && (
-        <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Active listings', value: profile.listing_count as number },
-              { label: 'Total sales', value: profile.total_sales as number },
-              {
-                label: 'Earnings',
-                value: `$${((profile.total_earnings as number) ?? 0).toFixed(2)}`,
-              },
-            ].map((s) => (
-              <div key={s.label} className="bg-white rounded-xl border p-4">
-                <p className="text-2xl font-bold text-violet-700">{s.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-              </div>
-            ))}
+  // Artist Dashboard
+  if (user?.role === 'artist') {
+    return (
+      <div className="min-h-screen bg-blue-950 text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Greeting */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">Hello, {user.username}</h1>
+            <p className="text-blue-300 mt-1">Welcome to your creator dashboard</p>
           </div>
 
-          {/* Stripe Connect */}
-          <div className="bg-white rounded-xl border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">Payment setup</h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Connect Stripe to receive payouts when your work is purchased.
-                </p>
-              </div>
-              {user.stripe_onboarded ? (
-                <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
-                  <CheckCircle className="h-4 w-4" />
-                  Connected
-                </span>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    onClick={checkStripeStatus}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Check status
-                  </button>
-                  <button
-                    onClick={handleStripeOnboard}
-                    disabled={onboarding}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 disabled:opacity-60 transition-colors"
-                  >
-                    {onboarding ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ExternalLink className="h-4 w-4" />
-                    )}
-                    Set up Stripe
-                  </button>
-                </div>
-              )}
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <p className="text-blue-400 text-sm mb-1">Active Listings</p>
+              <p className="text-3xl font-bold text-white">{(profile?.listing_count as number) || 0}</p>
+            </div>
+            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <p className="text-blue-400 text-sm mb-1">Total Sales</p>
+              <p className="text-3xl font-bold text-white">{(profile?.total_sales as number) || 0}</p>
+            </div>
+            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <p className="text-blue-400 text-sm mb-1">Earnings</p>
+              <p className="text-3xl font-bold text-orange-500">
+                ${((profile?.total_earnings as number) || 0).toFixed(2)}
+              </p>
             </div>
           </div>
 
-          {/* Recent listings */}
-          {Array.isArray(profile.listings) && (profile.listings as unknown[]).length > 0 && (
-            <div className="bg-white rounded-xl border p-6">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">Your listings</h2>
+          {/* Main Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Detect Copyright */}
+            <Link
+              to="/detect"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                  <Search className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Detect Copyright</h3>
+                <p className="text-blue-300 text-sm">
+                  Check if your artwork has been used without permission
+                </p>
+              </div>
+            </Link>
+
+            {/* License & Price */}
+            <Link
+              to="/upload"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                  <Upload className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">License & Price</h3>
+                <p className="text-blue-300 text-sm">
+                  Upload your work and set your pricing - we handle the licensing
+                </p>
+              </div>
+            </Link>
+
+            {/* Marketplace */}
+            <Link
+              to="/marketplace"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                  <Store className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Marketplace</h3>
+                <p className="text-blue-300 text-sm">
+                  View recommended AI companies and create offers
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Recent Activity */}
+          {Array.isArray(profile?.listings) && (profile.listings as unknown[]).length > 0 && (
+            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Your Recent Listings</h2>
               <div className="space-y-3">
-                {(profile.listings as Record<string, unknown>[]).map((l) => (
+                {(profile.listings as Record<string, unknown>[]).slice(0, 5).map((listing) => (
                   <Link
-                    key={l.id as number}
-                    to={`/marketplace/${l.id}`}
-                    className="flex items-center justify-between hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors"
+                    key={listing.id as number}
+                    to={`/marketplace/${listing.id}`}
+                    className="flex items-center justify-between p-4 bg-blue-950 rounded-lg hover:bg-blue-800 transition-colors"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{l.title as string}</p>
-                      <p className="text-xs text-gray-500 capitalize">
-                        {(l.license_type as string).replace('_', ' ')} · {l.work_type as string}
+                      <p className="text-white font-medium">{listing.title as string}</p>
+                      <p className="text-blue-400 text-sm capitalize">
+                        {(listing.license_type as string).replace('_', ' ')} · {listing.work_type as string}
                       </p>
                     </div>
-                    <span className="text-sm font-bold text-violet-700">
-                      ${(l.price as number).toFixed(2)}
+                    <span className="text-orange-500 font-bold">
+                      ${(listing.price as number).toFixed(2)}
                     </span>
                   </Link>
                 ))}
               </div>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
+    )
+  }
 
-      {/* Company dashboard */}
-      {user?.role === 'company' && profile && (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Purchases', value: profile.total_purchases as number, icon: CreditCard },
-              {
-                label: 'Total spent',
-                value: `$${((profile.total_spent as number) ?? 0).toFixed(2)}`,
-                icon: TrendingUp,
-              },
-            ].map((s) => (
-              <div key={s.label} className="bg-white rounded-xl border p-4">
-                <p className="text-2xl font-bold text-violet-700">{s.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-              </div>
-            ))}
+  // Company Dashboard
+  if (user?.role === 'company') {
+    const companyName = (profile?.company_name as string) || user.username
+
+    return (
+      <div className="min-h-screen bg-blue-950 text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Greeting */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">Hello, {companyName}</h1>
+            <p className="text-blue-300 mt-1">Welcome to your company dashboard</p>
           </div>
 
-          {Array.isArray(profile.recent_purchases) &&
-            (profile.recent_purchases as unknown[]).length > 0 && (
-              <div className="bg-white rounded-xl border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-semibold text-gray-900">Recent purchases</h2>
-                  <Link
-                    to="/purchases"
-                    className="text-sm text-violet-600 hover:underline"
-                  >
-                    View all
-                  </Link>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <p className="text-blue-400 text-sm mb-1">Total Purchases</p>
+              <p className="text-3xl font-bold text-white">{(profile?.total_purchases as number) || 0}</p>
+            </div>
+            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <p className="text-blue-400 text-sm mb-1">Total Spent</p>
+              <p className="text-3xl font-bold text-orange-500">
+                ${((profile?.total_spent as number) || 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Main Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Create Request */}
+            <Link
+              to="/requests/create"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                  <Plus className="w-8 h-8 text-orange-500" />
                 </div>
-                <div className="space-y-3">
-                  {(profile.recent_purchases as Record<string, unknown>[]).map((p) => (
-                    <div key={p.id as number} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {p.listing_title as string}
-                        </p>
-                        <p className="text-xs text-gray-500 capitalize">
-                          {(p.license_type as string).replace('_', ' ')} ·{' '}
-                          {new Date(p.purchased_at as string).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span className="text-sm font-bold text-violet-700">
-                        ${(p.amount as number).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Create Request</h3>
+                <p className="text-blue-300 text-sm">
+                  Specify the type of data and budget you're looking for
+                </p>
               </div>
-            )}
-        </>
-      )}
-    </div>
-  )
+            </Link>
+
+            {/* Browse Recommended Deals */}
+            <Link
+              to="/marketplace"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                  <TrendingUp className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Recommended Deals</h3>
+                <p className="text-blue-300 text-sm">
+                  Browse curated datasets matched to your needs
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Recent Purchases */}
+          {Array.isArray(profile?.recent_purchases) && (profile.recent_purchases as unknown[]).length > 0 && (
+            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">Recent Purchases</h2>
+                <Link to="/purchases" className="text-orange-400 hover:text-orange-300 text-sm">
+                  View all →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {(profile.recent_purchases as Record<string, unknown>[]).slice(0, 5).map((purchase) => (
+                  <div
+                    key={purchase.id as number}
+                    className="flex items-center justify-between p-4 bg-blue-950 rounded-lg"
+                  >
+                    <div>
+                      <p className="text-white font-medium">{purchase.listing_title as string}</p>
+                      <p className="text-blue-400 text-sm">
+                        {new Date(purchase.purchased_at as string).toLocaleDateString()} ·{' '}
+                        {(purchase.license_type as string).replace('_', ' ')}
+                      </p>
+                    </div>
+                    <span className="text-orange-500 font-bold">
+                      ${(purchase.amount as number).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommended Datasets */}
+          <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <h2 className="text-xl font-bold text-white mb-4">Recommended for You</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { type: 'Images', count: '50K+', price: '$2,499' },
+                { type: 'Audio', count: '25K+', price: '$1,899' },
+                { type: 'Text', count: '100K+', price: '$3,299' },
+              ].map((dataset) => (
+                <Link
+                  key={dataset.type}
+                  to="/marketplace"
+                  className="p-6 bg-blue-950 rounded-lg border border-blue-800 hover:border-orange-500 transition-colors group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <FileSearch className="w-6 h-6 text-orange-500" />
+                    <span className="text-xs text-blue-400">{dataset.count} items</span>
+                  </div>
+                  <h3 className="text-white font-bold mb-1">{dataset.type} Dataset</h3>
+                  <p className="text-orange-500 font-bold text-lg">{dataset.price}</p>
+                  <p className="text-blue-400 text-xs mt-2 group-hover:text-orange-400 transition-colors">
+                    View details →
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
