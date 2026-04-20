@@ -3,7 +3,8 @@ Profile endpoints for artists and companies.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import Optional
 
 from app.models.database import User, ArtistProfile, CompanyProfile, Listing, Purchase
@@ -17,8 +18,9 @@ router = APIRouter(prefix="/profiles", tags=["Profiles"])
 # ─────────────────────────────────────────
 
 @router.get("/artist/{user_id}")
-def get_artist_profile(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id, User.role == "artist").first()
+async def get_artist_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).filter(User.id == user_id, User.role == "artist"))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Artist not found")
 
@@ -58,7 +60,7 @@ def get_artist_profile(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/artist/{user_id}")
-def update_artist_profile(
+async def update_artist_profile(
     user_id: int,
     display_name: Optional[str] = None,
     bio: Optional[str] = None,
@@ -67,9 +69,10 @@ def update_artist_profile(
     specialties: Optional[list] = None,
     portfolio_url: Optional[str] = None,
     social_links: Optional[dict] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(User).filter(User.id == user_id, User.role == "artist").first()
+    result = await db.execute(select(User).filter(User.id == user_id, User.role == "artist"))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Artist not found")
 
@@ -94,7 +97,7 @@ def update_artist_profile(
     if social_links is not None:
         profile.social_links = social_links
 
-    db.commit()
+    await db.commit()
     return {"updated": True}
 
 
@@ -103,8 +106,9 @@ def update_artist_profile(
 # ─────────────────────────────────────────
 
 @router.get("/company/{user_id}")
-def get_company_profile(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id, User.role == "company").first()
+async def get_company_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).filter(User.id == user_id, User.role == "company"))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Company not found")
 
@@ -140,7 +144,7 @@ def get_company_profile(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/company/{user_id}")
-def update_company_profile(
+async def update_company_profile(
     user_id: int,
     company_name: Optional[str] = None,
     industry: Optional[str] = None,
@@ -148,9 +152,10 @@ def update_company_profile(
     use_case: Optional[str] = None,
     bio: Optional[str] = None,
     website: Optional[str] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(User).filter(User.id == user_id, User.role == "company").first()
+    result = await db.execute(select(User).filter(User.id == user_id, User.role == "company"))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Company not found")
 
@@ -173,7 +178,7 @@ def update_company_profile(
     if use_case is not None:
         profile.use_case = use_case
 
-    db.commit()
+    await db.commit()
     return {"updated": True}
 
 
@@ -182,21 +187,27 @@ def update_company_profile(
 # ─────────────────────────────────────────
 
 @router.post("/register")
-def register_user(
+async def register_user(
     email: str,
     username: str,
     password: str,
     role: str,                  # artist | company
     company_name: Optional[str] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     import hashlib
     from datetime import datetime
 
-    if db.query(User).filter(User.email == email).first():
+    # Check if email exists
+    result = await db.execute(select(User).filter(User.email == email))
+    if result.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email already registered")
-    if db.query(User).filter(User.username == username).first():
+
+    # Check if username exists
+    result = await db.execute(select(User).filter(User.username == username))
+    if result.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Username taken")
+
     if role not in ("artist", "company"):
         raise HTTPException(status_code=400, detail="Role must be artist or company")
     if role == "company" and not company_name:
@@ -211,23 +222,26 @@ def register_user(
         created_at=datetime.utcnow(),
     )
     db.add(user)
-    db.flush()
+    await db.flush()
 
     if role == "artist":
         db.add(ArtistProfile(user_id=user.id, display_name=username))
     else:
         db.add(CompanyProfile(user_id=user.id, company_name=company_name))
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return {"user_id": user.id, "role": user.role, "username": user.username}
 
 
 @router.post("/login")
-def login_user(email: str, password: str, db: Session = Depends(get_db)):
+async def login_user(email: str, password: str, db: AsyncSession = Depends(get_db)):
     import hashlib
     hashed_pw = hashlib.sha256(password.encode()).hexdigest()
-    user = db.query(User).filter(User.email == email, User.hashed_password == hashed_pw).first()
+    result = await db.execute(
+        select(User).filter(User.email == email, User.hashed_password == hashed_pw)
+    )
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {
