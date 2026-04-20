@@ -55,6 +55,14 @@ app.include_router(profile_router)
 app.include_router(marketplace_router)
 app.include_router(stripe_router)
 
+# Also mount under /api/v1 so built frontends with old URL still work
+from fastapi import APIRouter as _APIRouter
+_v1 = _APIRouter(prefix="/api/v1")
+_v1.include_router(profile_router)
+_v1.include_router(marketplace_router)
+_v1.include_router(stripe_router)
+app.include_router(_v1)
+
 
 # ── Health / root ─────────────────────────────────────────────────────────────
 
