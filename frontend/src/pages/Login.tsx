@@ -33,8 +33,19 @@ export default function Login() {
   const update = (k: keyof typeof form, v: string) =>
     setForm((f) => ({ ...f, [k]: v }))
 
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isValidEmail(form.email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
     setLoading(true)
     try {
       if (mode === 'login') {

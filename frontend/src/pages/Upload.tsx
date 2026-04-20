@@ -109,184 +109,188 @@ export default function Upload() {
 
   if (step === 'done') {
     return (
-      <div className="max-w-lg mx-auto text-center py-20">
-        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900">Listing live!</h2>
-        <p className="text-gray-500 mt-2">Your work is now listed on the marketplace.</p>
-        <button
-          onClick={() => {
-            setStep('upload')
-            setFile(null)
-            setWorkId(null)
-          }}
-          className="mt-6 px-6 py-2.5 bg-violet-600 text-white rounded-lg font-medium hover:bg-violet-700"
-        >
-          Upload another
-        </button>
+      <div className="min-h-screen bg-blue-950 flex items-center justify-center p-4">
+        <div className="max-w-lg mx-auto text-center py-20">
+          <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white">Listing live!</h2>
+          <p className="text-blue-300 mt-2">Your work is now listed on the marketplace.</p>
+          <button
+            onClick={() => {
+              setStep('upload')
+              setFile(null)
+              setWorkId(null)
+            }}
+            className="mt-6 px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600"
+          >
+            Upload another
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">
-        {step === 'upload' ? 'Upload Creative Work' : 'Create Listing'}
-      </h1>
+    <div className="min-h-screen bg-blue-950 p-6">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <h1 className="text-2xl font-bold text-white">
+          {step === 'upload' ? 'Upload Creative Work' : 'Create Listing'}
+        </h1>
 
-      {step === 'upload' && (
-        <form onSubmit={handleUpload} className="space-y-6">
-          {/* Dropzone */}
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-              isDragActive
-                ? 'border-violet-500 bg-violet-50'
-                : file
-                ? 'border-green-400 bg-green-50'
-                : 'border-gray-300 hover:border-violet-400'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <UploadIcon className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-            {file ? (
-              <p className="text-sm font-medium text-green-700">{file.name}</p>
-            ) : (
-              <>
-                <p className="text-sm font-medium text-gray-700">
-                  Drop your file here or click to browse
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Images, audio, video, text, or ZIP datasets
-                </p>
-              </>
-            )}
-          </div>
+        {step === 'upload' && (
+          <form onSubmit={handleUpload} className="space-y-6">
+            {/* Dropzone */}
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
+                isDragActive
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : file
+                  ? 'border-green-400 bg-green-400/10'
+                  : 'border-blue-700 bg-blue-900 hover:border-orange-500'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <UploadIcon className="h-10 w-10 mx-auto text-blue-400 mb-2" />
+              {file ? (
+                <p className="text-sm font-medium text-green-400">{file.name}</p>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-white">
+                    Drop your file here or click to browse
+                  </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    Images, audio, video, text, or ZIP datasets
+                  </p>
+                </>
+              )}
+            </div>
 
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-              <input
-                required
-                value={meta.title}
-                onChange={(e) => setMeta((m) => ({ ...m, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                rows={3}
-                value={meta.description}
-                onChange={(e) => setMeta((m) => ({ ...m, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tags (comma-separated)
-              </label>
-              <input
-                value={meta.tags}
-                onChange={(e) => setMeta((m) => ({ ...m, tags: e.target.value }))}
-                placeholder="portrait, oil painting, landscape"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!file || uploading}
-            className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
-          >
-            {uploading ? 'Uploading…' : 'Upload & continue'}
-          </button>
-        </form>
-      )}
-
-      {step === 'listing' && (
-        <form onSubmit={handleCreateListing} className="space-y-5">
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Listing title *</label>
-              <input
-                required
-                value={listingForm.title}
-                onChange={(e) => setListingForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                rows={3}
-                value={listingForm.description}
-                onChange={(e) => setListingForm((f) => ({ ...f, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price (USD) *</label>
+                <label className="block text-sm font-medium text-blue-200 mb-1">Title *</label>
                 <input
                   required
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={listingForm.price}
-                  onChange={(e) => setListingForm((f) => ({ ...f, price: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                  value={meta.title}
+                  onChange={(e) => setMeta((m) => ({ ...m, title: e.target.value }))}
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max buyers</label>
+                <label className="block text-sm font-medium text-blue-200 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={meta.description}
+                  onChange={(e) => setMeta((m) => ({ ...m, description: e.target.value }))}
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-1">
+                  Tags (comma-separated)
+                </label>
                 <input
-                  type="number"
-                  min="1"
-                  placeholder="Unlimited"
-                  value={listingForm.max_buyers}
-                  onChange={(e) => setListingForm((f) => ({ ...f, max_buyers: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                  value={meta.tags}
+                  onChange={(e) => setMeta((m) => ({ ...m, tags: e.target.value }))}
+                  placeholder="portrait, oil painting, landscape"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">License type *</label>
-              <select
-                value={listingForm.license_type}
-                onChange={(e) => setListingForm((f) => ({ ...f, license_type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                {LICENSE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                License details / terms
-              </label>
-              <textarea
-                rows={2}
-                value={listingForm.license_details}
-                onChange={(e) =>
-                  setListingForm((f) => ({ ...f, license_details: e.target.value }))
-                }
-                placeholder="Any specific restrictions or permissions…"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={listing}
-            className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
-          >
-            {listing ? 'Creating listing…' : 'Publish listing'}
-          </button>
-        </form>
-      )}
+            <button
+              type="submit"
+              disabled={!file || uploading}
+              className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+            >
+              {uploading ? 'Uploading…' : 'Upload & continue'}
+            </button>
+          </form>
+        )}
+
+        {step === 'listing' && (
+          <form onSubmit={handleCreateListing} className="space-y-5">
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-1">Listing title *</label>
+                <input
+                  required
+                  value={listingForm.title}
+                  onChange={(e) => setListingForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={listingForm.description}
+                  onChange={(e) => setListingForm((f) => ({ ...f, description: e.target.value }))}
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-blue-200 mb-1">Price (USD) *</label>
+                  <input
+                    required
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={listingForm.price}
+                    onChange={(e) => setListingForm((f) => ({ ...f, price: e.target.value }))}
+                    className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-200 mb-1">Max buyers</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Unlimited"
+                    value={listingForm.max_buyers}
+                    onChange={(e) => setListingForm((f) => ({ ...f, max_buyers: e.target.value }))}
+                    className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-1">License type *</label>
+                <select
+                  value={listingForm.license_type}
+                  onChange={(e) => setListingForm((f) => ({ ...f, license_type: e.target.value }))}
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  {LICENSE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-1">
+                  License details / terms
+                </label>
+                <textarea
+                  rows={2}
+                  value={listingForm.license_details}
+                  onChange={(e) =>
+                    setListingForm((f) => ({ ...f, license_details: e.target.value }))
+                  }
+                  placeholder="Any specific restrictions or permissions…"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={listing}
+              className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+            >
+              {listing ? 'Creating listing…' : 'Publish listing'}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
