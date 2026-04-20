@@ -43,6 +43,9 @@ def upgrade() -> None:
         ("stripe_account_id", sa.String(),  {"nullable": True}),
         ("stripe_customer_id",sa.String(),  {"nullable": True}),
         ("stripe_onboarded",  sa.Boolean(), {"nullable": True, "server_default": "false"}),
+        ("is_verified",       sa.Boolean(), {"nullable": True, "server_default": "false"}),
+        ("consent_terms",     sa.Boolean(), {"nullable": True, "server_default": "false"}),
+        ("consent_date",      sa.DateTime(),{"nullable": True}),
     ]:
         try:
             op.add_column("users", sa.Column(col, type_, **kwargs))
