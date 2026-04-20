@@ -30,8 +30,12 @@ export default function Login() {
     }
   }, [urlRole])
 
-  const update = (k: keyof typeof form, v: string) =>
+  const [emailError, setEmailError] = useState('')
+
+  const update = (k: keyof typeof form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }))
+    if (k === 'email') setEmailError('')
+  }
 
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -42,7 +46,7 @@ export default function Login() {
     e.preventDefault()
 
     if (!isValidEmail(form.email)) {
-      toast.error('Please enter a valid email address')
+      setEmailError('Please enter a valid email address')
       return
     }
 
@@ -114,12 +118,14 @@ export default function Login() {
           <div>
             <label className="block text-sm font-medium text-blue-200 mb-1">Email</label>
             <input
-              type="email"
-              required
+              type="text"
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
-              className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+              className={`w-full px-3 py-2 bg-blue-950 border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500 ${emailError ? 'border-red-500' : 'border-blue-700'}`}
             />
+            {emailError && (
+              <p className="mt-1 text-sm text-red-400">{emailError}</p>
+            )}
           </div>
 
           {mode === 'register' && (

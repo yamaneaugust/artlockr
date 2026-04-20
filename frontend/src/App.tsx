@@ -9,6 +9,7 @@ import Purchases from './pages/Purchases'
 import PublicDatasets from './pages/PublicDatasets'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import Detect from './pages/Detect'
 import { useAuthStore } from './store/authStore'
 
 function App() {
@@ -35,6 +36,14 @@ function App() {
             element={
               <Protected role="artist">
                 <Upload />
+              </Protected>
+            }
+          />
+          <Route
+            path="detect"
+            element={
+              <Protected>
+                <Detect />
               </Protected>
             }
           />
