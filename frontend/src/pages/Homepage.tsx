@@ -36,12 +36,12 @@ export default function Homepage() {
               <a href="#features" className="text-gray-300 hover:text-white transition-colors">
                 Features
               </a>
-              <a href="#verify" className="text-gray-300 hover:text-white transition-colors">
+              <Link to="/detect" className="text-gray-300 hover:text-white transition-colors">
                 Verify Datasets
-              </a>
-              <a href="#about" className="text-gray-300 hover:text-white transition-colors">
-                About
-              </a>
+              </Link>
+              <Link to="/marketplace" className="text-gray-300 hover:text-white transition-colors">
+                Marketplace
+              </Link>
             </div>
 
             {/* Right Nav */}
@@ -82,9 +82,11 @@ export default function Homepage() {
                 <br />
                 in AI <span className="text-orange-500">datasets</span>.
               </h1>
-              <p className="text-lg text-gray-400 mb-8 max-w-lg">
-                Empowering creators and AI companies with a secure platform to manage permissions
-                and audit datasets.
+              <p className="text-2xl font-semibold text-orange-400 mb-3">
+                Your Key. Your Art. Your Identity.
+              </p>
+              <p className="text-lg text-gray-300 mb-8 max-w-lg">
+                Train on data you can trust
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -146,7 +148,7 @@ export default function Homepage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-16 px-6">
+      <section className="relative py-16 px-6 mb-20">
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-8">
             Create an account today and join a{' '}
@@ -158,7 +160,7 @@ export default function Homepage() {
         {/* Holographic code windows background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Left terminal window */}
-          <div className="absolute bottom-0 left-12 w-48 h-64 border-2 border-orange-500/30 rounded-xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent transform -rotate-12">
+          <div className="absolute bottom-4 left-12 w-48 h-56 border-2 border-orange-500/30 rounded-xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent transform -rotate-12">
             <div className="p-3 space-y-1 opacity-60">
               <div className="h-1 bg-orange-400/70 w-3/4 rounded" />
               <div className="h-1 bg-orange-400/50 w-1/2 rounded" />
@@ -170,7 +172,7 @@ export default function Homepage() {
           </div>
 
           {/* Center main code window */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-80 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-br from-orange-900/30 via-blue-900/20 to-transparent transform rotate-3 shadow-2xl shadow-orange-500/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-96 h-72 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-br from-orange-900/30 via-blue-900/20 to-transparent transform rotate-3 shadow-2xl shadow-orange-500/20">
             <div className="p-4 space-y-1.5 opacity-70 font-mono text-xs">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-orange-500/60" />
@@ -192,7 +194,7 @@ export default function Homepage() {
           </div>
 
           {/* Right small window with chart */}
-          <div className="absolute bottom-12 right-16 w-44 h-56 border border-orange-500/30 rounded-xl bg-gradient-to-tl from-orange-900/20 via-blue-900/10 to-transparent transform rotate-6">
+          <div className="absolute bottom-8 right-16 w-44 h-48 border border-orange-500/30 rounded-xl bg-gradient-to-tl from-orange-900/20 via-blue-900/10 to-transparent transform rotate-6">
             <div className="p-3 space-y-2 opacity-60">
               {/* Simulated bar chart */}
               <div className="flex items-end gap-1 h-24">
