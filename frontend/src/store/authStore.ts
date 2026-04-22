@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { login as apiLogin, register as apiRegister } from '../services/api'
 
 export interface AuthUser {
   id: number
@@ -51,17 +50,18 @@ function saveAccounts(accounts: LocalAccount[]): void {
 }
 
 async function hashPassword(password: string): Promise<string> {
-  const data = new TextEncoder().encode(password)
-  const buf = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-function isBackendUnreachable(err: unknown): boolean {
-  const e = err as { code?: string; response?: { status?: number }; message?: string }
-  if (e?.response?.status !== undefined) return false
-  return true
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const data = new TextEncoder().encode(password)
+    const buf = await crypto.subtle.digest('SHA-256', data)
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+  }
+  let h = 0
+  for (let i = 0; i < password.length; i++) {
+    h = (h * 31 + password.charCodeAt(i)) | 0
+  }
+  return `fallback:${h}`
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -71,32 +71,13 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (email, password) => {
-        try {
-          const { data } = await apiLogin(email, password)
-          set({
-            user: {
-              id: data.user_id,
-              email: data.email,
-              username: data.username,
-              role: data.role,
-              stripe_onboarded: data.stripe_onboarded,
-            },
-            isAuthenticated: true,
-          })
-          return
-        } catch (err) {
-          if (!isBackendUnreachable(err)) throw err
-        }
-
         const accounts = loadAccounts()
         const hashed = await hashPassword(password)
         const match = accounts.find(
           (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === hashed,
         )
         if (!match) {
-          throw {
-            response: { data: { detail: 'Invalid email or password' } },
-          }
+          throw { response: { data: { detail: 'Invalid email or password' } } }
         }
         set({
           user: {
@@ -111,29 +92,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       register: async (email, username, password, role, company_name) => {
-        try {
-          const { data } = await apiRegister(email, username, password, role, company_name)
-          set({
-            user: {
-              id: data.user_id,
-              email,
-              username: data.username,
-              role: data.role,
-              company_name,
-            },
-            isAuthenticated: true,
-          })
-          return
-        } catch (err) {
-          if (!isBackendUnreachable(err)) throw err
-        }
-
         const accounts = loadAccounts()
         if (accounts.some((a) => a.email.toLowerCase() === email.toLowerCase())) {
           throw { response: { data: { detail: 'Email already registered' } } }
         }
         if (accounts.some((a) => a.username.toLowerCase() === username.toLowerCase())) {
           throw { response: { data: { detail: 'Username taken' } } }
+        }
+        if (role === 'company' && !company_name) {
+          throw { response: { data: { detail: 'Company name is required' } } }
         }
         const hashed = await hashPassword(password)
         const id = Date.now()
