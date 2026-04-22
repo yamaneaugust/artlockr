@@ -81,8 +81,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-950 flex items-center justify-center p-4">
-      <div className="bg-blue-900 rounded-2xl shadow-xl w-full max-w-md p-8 border border-blue-800">
+    <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center p-4">
+      <div className="bg-[#0a0e27] rounded-2xl shadow-xl w-full max-w-md p-8 border border-blue-900/60">
         <div className="flex flex-col items-center mb-8">
           <Lock className="h-10 w-10 text-orange-500 mb-2" fill="currentColor" />
           <h1 className="text-2xl font-bold text-white">ArtLock</h1>
@@ -98,7 +98,7 @@ export default function Login() {
           </div>
         )}
 
-        <div className="flex rounded-lg bg-blue-950 p-1 mb-6">
+        <div className="flex rounded-lg bg-blue-950/60 p-1 mb-6">
           {(['login', 'register'] as const).map((m) => (
             <button
               key={m}
@@ -121,7 +121,7 @@ export default function Login() {
               type="text"
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
-              className={`w-full px-3 py-2 bg-blue-950 border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500 ${emailError ? 'border-red-500' : 'border-blue-700'}`}
+              className={`w-full px-3 py-2 bg-[#050823] border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500 ${emailError ? 'border-red-500' : 'border-blue-700'}`}
             />
             {emailError && (
               <p className="mt-1 text-sm text-red-400">{emailError}</p>
@@ -136,7 +136,7 @@ export default function Login() {
                 required
                 value={form.username}
                 onChange={(e) => update('username', e.target.value)}
-                className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+                className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
           )}
@@ -148,7 +148,7 @@ export default function Login() {
               required
               value={form.password}
               onChange={(e) => update('password', e.target.value)}
-              className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+              className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function Login() {
                 required
                 value={form.company_name}
                 onChange={(e) => update('company_name', e.target.value)}
-                className="w-full px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+                className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
           )}
