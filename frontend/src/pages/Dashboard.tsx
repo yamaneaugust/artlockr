@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Upload, Store, FileSearch, Plus, TrendingUp, Loader2 } from 'lucide-react'
+import { Search, Upload, Store, Plus, TrendingUp, Loader2 } from 'lucide-react'
 import { getArtistProfile, getCompanyProfile } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
@@ -228,34 +228,6 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          {/* Recommended Datasets */}
-          <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Recommended for You</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { type: 'Images', count: '50K+', price: '$2,499' },
-                { type: 'Audio', count: '25K+', price: '$1,899' },
-                { type: 'Text', count: '100K+', price: '$3,299' },
-              ].map((dataset) => (
-                <Link
-                  key={dataset.type}
-                  to="/marketplace"
-                  className="p-6 bg-blue-950 rounded-lg border border-blue-800 hover:border-orange-500 transition-colors group"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <FileSearch className="w-6 h-6 text-orange-500" />
-                    <span className="text-xs text-blue-400">{dataset.count} items</span>
-                  </div>
-                  <h3 className="text-white font-bold mb-1">{dataset.type} Dataset</h3>
-                  <p className="text-orange-500 font-bold text-lg">{dataset.price}</p>
-                  <p className="text-blue-400 text-xs mt-2 group-hover:text-orange-400 transition-colors">
-                    View details →
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     )
