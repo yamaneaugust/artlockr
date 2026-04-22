@@ -74,7 +74,7 @@ export default function Homepage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
             <div>
-              <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+              <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-8">
                 Track, <span className="text-orange-500">license</span>, and{' '}
                 <span className="text-orange-500">verify</span>
                 <br />
@@ -82,12 +82,6 @@ export default function Homepage() {
                 <br />
                 in AI <span className="text-orange-500">datasets</span>.
               </h1>
-              <p className="text-2xl font-semibold text-orange-400 mb-3">
-                Your Key. Your Art. Your Identity.
-              </p>
-              <p className="text-lg text-gray-300 mb-8 max-w-lg">
-                Train on data you can trust
-              </p>
               <div className="flex flex-wrap gap-4">
                 <Link
                   to="/login?role=artist"
@@ -144,6 +138,24 @@ export default function Homepage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Tagline Panel 1 */}
+      <section className="relative py-20 px-6">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold">
+            <span className="text-orange-400">Your Key. Your Art. Your Identity.</span>
+          </h2>
+        </div>
+      </section>
+
+      {/* Tagline Panel 2 */}
+      <section className="relative py-20 px-6">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-200">
+            Train on data you can <span className="text-orange-500">trust</span>.
+          </h2>
         </div>
       </section>
 
