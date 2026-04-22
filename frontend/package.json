@@ -11,17 +11,17 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "axios": "^1.6.2",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "axios": "^1.6.2",
-    "zustand": "^4.4.7",
     "react-dropzone": "^14.2.3",
-    "recharts": "^2.10.3",
     "react-hot-toast": "^2.4.1",
-    "lucide-react": "^0.294.0",
-    "clsx": "^2.0.0",
-    "date-fns": "^2.30.0"
+    "react-router-dom": "^6.20.0",
+    "recharts": "^2.10.3",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -34,6 +34,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "postcss": "^8.4.32",
+    "serve": "^14.2.6",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
