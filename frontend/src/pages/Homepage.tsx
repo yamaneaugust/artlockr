@@ -1,5 +1,52 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Lock, Camera, FileCheck, Search, FileText } from 'lucide-react'
+
+function useInView<T extends HTMLElement>(options?: IntersectionObserverInit) {
+  const ref = useRef<T | null>(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.25, rootMargin: '0px 0px -10% 0px', ...options },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [options])
+
+  return { ref, inView }
+}
+
+function RevealSection({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}) {
+  const { ref, inView } = useInView<HTMLElement>()
+  return (
+    <section
+      ref={ref}
+      className={`${className} transition-all duration-1000 ease-out will-change-transform ${
+        inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </section>
+  )
+}
 
 export default function Homepage() {
   return (
@@ -141,26 +188,111 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* Tagline Panel 1 */}
-      <section className="relative py-20 px-6">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold">
-            <span className="text-orange-400">Your Key. Your Art. Your Identity.</span>
-          </h2>
-        </div>
-      </section>
+      {/* Tagline Panel 1 — "Your Key. Your Art. Your Identity." */}
+      <RevealSection className="relative py-32 px-6 overflow-hidden">
+        {/* Background holographic key ring */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Left: floating key card */}
+          <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 w-40 h-52 border-2 border-orange-500/30 rounded-2xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform -rotate-12 shadow-2xl shadow-orange-500/20">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Lock className="w-14 h-14 text-orange-400" strokeWidth={1.5} />
+            </div>
+            <div className="absolute top-3 left-3 right-3 space-y-1 opacity-40">
+              <div className="h-0.5 bg-orange-400/60 w-3/4" />
+              <div className="h-0.5 bg-orange-400/40 w-1/2" />
+            </div>
+          </div>
 
-      {/* Tagline Panel 2 */}
-      <section className="relative py-20 px-6">
+          {/* Right: floating fingerprint card */}
+          <div className="absolute top-1/2 right-8 md:right-20 -translate-y-1/2 w-44 h-52 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24">
+              <div className="absolute inset-0 rounded-full bg-gradient-radial from-orange-500 via-orange-400 to-transparent opacity-70 blur-lg" />
+              <div className="absolute inset-1 rounded-full" style={{
+                background: `repeating-radial-gradient(circle at center,
+                  transparent 0px, transparent 3px,
+                  rgba(255, 140, 0, 0.6) 4px, transparent 5px, transparent 8px)`
+              }} />
+            </div>
+          </div>
+
+          {/* Orange particle effects */}
+          <div className="absolute top-10 left-1/3 w-1.5 h-1.5 bg-orange-500 rounded-full blur-sm animate-pulse" />
+          <div className="absolute bottom-12 right-1/4 w-1 h-1 bg-orange-400 rounded-full blur-sm animate-pulse" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute top-20 right-1/3 w-2 h-2 bg-orange-500 rounded-full blur-sm animate-pulse" style={{ animationDelay: '0.8s' }} />
+          <div className="absolute bottom-20 left-1/4 w-1 h-1 bg-orange-400 rounded-full blur-sm" />
+        </div>
+
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-semibold text-gray-200">
+          <h2 className="text-4xl md:text-6xl font-bold leading-tight">
+            Your <span className="text-orange-500">Key</span>. Your <span className="text-orange-500">Art</span>. Your <span className="text-orange-500">Identity</span>.
+          </h2>
+          <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
+            Every work you register carries a cryptographic fingerprint — provably yours, forever.
+          </p>
+        </div>
+      </RevealSection>
+
+      {/* Tagline Panel 2 — "Train on data you can trust" */}
+      <RevealSection className="relative py-32 px-6 overflow-hidden">
+        {/* Background holographic data screens */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Left: data chart card */}
+          <div className="absolute top-1/2 left-8 md:left-24 -translate-y-1/2 w-48 h-56 border border-orange-500/30 rounded-2xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent backdrop-blur-sm transform -rotate-6 shadow-xl shadow-orange-500/20">
+            <div className="p-4 space-y-2 opacity-70">
+              <div className="flex items-end gap-1.5 h-24">
+                <div className="w-3 bg-orange-500/60 h-10 rounded-t" />
+                <div className="w-3 bg-orange-500/70 h-16 rounded-t" />
+                <div className="w-3 bg-orange-500/50 h-12 rounded-t" />
+                <div className="w-3 bg-orange-500/80 h-20 rounded-t" />
+                <div className="w-3 bg-orange-500/60 h-14 rounded-t" />
+                <div className="w-3 bg-orange-500/70 h-18 rounded-t" />
+              </div>
+              <div className="space-y-1 pt-2">
+                <div className="h-1 bg-orange-400/50 w-3/4 rounded" />
+                <div className="h-1 bg-orange-400/40 w-1/2 rounded" />
+                <div className="h-1 bg-orange-400/60 w-2/3 rounded" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right: verification card */}
+          <div className="absolute top-1/2 right-8 md:right-24 -translate-y-1/2 w-44 h-56 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
+            <div className="absolute top-3 left-3 right-3 space-y-1 opacity-40">
+              <div className="h-0.5 bg-orange-400/60 w-3/4" />
+              <div className="h-0.5 bg-orange-400/40 w-1/2" />
+              <div className="h-0.5 bg-orange-400/50 w-2/3" />
+            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-orange-500/40 blur-xl" />
+                <FileCheck className="w-14 h-14 text-orange-400 relative" strokeWidth={1.5} />
+              </div>
+            </div>
+            <div className="absolute bottom-3 left-3 right-3 space-y-1 opacity-40">
+              <div className="h-0.5 bg-orange-400/50 w-2/3" />
+              <div className="h-0.5 bg-orange-400/40 w-3/4" />
+            </div>
+          </div>
+
+          {/* Orange particle effects */}
+          <div className="absolute top-16 right-1/3 w-1.5 h-1.5 bg-orange-500 rounded-full blur-sm animate-pulse" style={{ animationDelay: '0.3s' }} />
+          <div className="absolute bottom-16 left-1/3 w-1 h-1 bg-orange-400 rounded-full blur-sm animate-pulse" style={{ animationDelay: '1.2s' }} />
+          <div className="absolute top-1/3 left-1/2 w-2 h-2 bg-orange-500 rounded-full blur-sm animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-10 right-1/4 w-1 h-1 bg-orange-400 rounded-full blur-sm" />
+        </div>
+
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold leading-tight">
             Train on data you can <span className="text-orange-500">trust</span>.
           </h2>
+          <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
+            Verified provenance, audited licenses, and end-to-end transparency for every dataset.
+          </p>
         </div>
-      </section>
+      </RevealSection>
 
       {/* CTA Section */}
-      <section className="relative py-16 px-6 mb-20">
+      <RevealSection className="relative py-16 px-6 mb-20">
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-8">
             Create an account today and join a{' '}
@@ -224,7 +356,7 @@ export default function Homepage() {
           <div className="absolute bottom-48 right-1/3 w-1.5 h-1.5 bg-orange-400 rounded-full blur-sm" />
           <div className="absolute bottom-20 left-1/3 w-1 h-1 bg-orange-500 rounded-full blur-sm animate-pulse" />
         </div>
-      </section>
+      </RevealSection>
 
       {/* Features Section */}
       <section className="relative py-20 px-6 mt-16" id="features">
