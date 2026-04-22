@@ -182,12 +182,9 @@ export default function Dashboard() {
             </Link>
 
             {/* Browse Recommended Deals */}
-            <Link
-              to="/marketplace"
-              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
-            >
+            <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 p-8">
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
                   <TrendingUp className="w-8 h-8 text-orange-500" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Recommended Deals</h3>
@@ -195,7 +192,7 @@ export default function Dashboard() {
                   Browse curated datasets matched to your needs
                 </p>
               </div>
-            </Link>
+            </div>
           </div>
 
           {/* Recent Purchases */}

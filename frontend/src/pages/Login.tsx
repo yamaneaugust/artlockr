@@ -8,12 +8,17 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { login, register } = useAuthStore()
-  const [mode, setMode] = useState<'login' | 'register'>('register')
-  const [loading, setLoading] = useState(false)
 
-  // Get role from URL if present
+  // Get role and mode from URL
   const urlRole = searchParams.get('role') as 'artist' | 'company' | null
+  const urlMode = searchParams.get('mode') as 'login' | 'register' | null
   const hasPreselectedRole = urlRole !== null
+
+  // If role is specified, default to register. Otherwise default to login
+  const [mode, setMode] = useState<'login' | 'register'>(
+    urlMode || (hasPreselectedRole ? 'register' : 'login')
+  )
+  const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
     email: '',
