@@ -29,7 +29,7 @@ export default function Dashboard() {
   // Artist Dashboard
   if (user?.role === 'artist') {
     return (
-      <div className="min-h-screen bg-blue-950 text-white p-6">
+      <div className="min-h-screen bg-[#0a0e27] text-white p-6">
         <div className="max-w-7xl mx-auto">
           {/* Greeting */}
           <div className="mb-8">
@@ -141,7 +141,7 @@ export default function Dashboard() {
     const companyName = (profile?.company_name as string) || user.username
 
     return (
-      <div className="min-h-screen bg-blue-950 text-white p-6">
+      <div className="min-h-screen bg-[#0a0e27] text-white p-6">
         <div className="max-w-7xl mx-auto">
           {/* Greeting */}
           <div className="mb-8">
