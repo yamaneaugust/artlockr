@@ -19,12 +19,12 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Layout />}>
-          <Route path="marketplace" element={<Marketplace />} />
-          <Route path="marketplace/:id" element={<ListingDetail />} />
-          <Route path="datasets" element={<PublicDatasets />} />
+        <Route element={<Layout />}>
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/:id" element={<ListingDetail />} />
+          <Route path="/datasets" element={<PublicDatasets />} />
           <Route
-            path="dashboard"
+            path="/dashboard"
             element={
               <Protected>
                 <Dashboard />
@@ -32,7 +32,7 @@ function App() {
             }
           />
           <Route
-            path="upload"
+            path="/upload"
             element={
               <Protected role="artist">
                 <Upload />
@@ -40,7 +40,7 @@ function App() {
             }
           />
           <Route
-            path="detect"
+            path="/detect"
             element={
               <Protected>
                 <Detect />
@@ -48,7 +48,7 @@ function App() {
             }
           />
           <Route
-            path="purchases"
+            path="/purchases"
             element={
               <Protected role="company">
                 <Purchases />
