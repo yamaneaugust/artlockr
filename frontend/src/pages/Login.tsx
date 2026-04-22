@@ -68,7 +68,6 @@ export default function Login() {
           form.role === 'company' ? form.company_name : undefined,
         )
       }
-      toast.success(mode === 'login' ? 'Welcome back!' : 'Account created!')
       navigate('/dashboard')
     } catch (err: unknown) {
       const msg =

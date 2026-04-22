@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { ShoppingBag, Upload, LayoutDashboard, Database, CreditCard, LogOut, Palette } from 'lucide-react'
+import { ShoppingBag, Upload, LayoutDashboard, Database, LogOut, Palette } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function Layout() {
@@ -11,7 +11,6 @@ export default function Layout() {
     { name: 'Public Datasets', href: '/datasets', icon: Database, always: true },
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, auth: true },
     { name: 'Upload Work', href: '/upload', icon: Upload, role: 'artist' },
-    { name: 'My Licenses', href: '/purchases', icon: CreditCard, role: 'company' },
   ]
 
   const visibleNav = navItems.filter((item) => {
