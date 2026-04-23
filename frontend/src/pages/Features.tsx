@@ -1,9 +1,70 @@
-import { Camera, FileCheck, Search, FileText, ShoppingBag } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Camera, FileCheck, Search, FileText, ShoppingBag, Lock } from 'lucide-react'
 
 export default function Features() {
   return (
-    <div className="min-h-screen bg-[#0a0e27] text-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0a0e27] text-white overflow-hidden relative">
+      {/* Starfield background */}
+      <div className="fixed inset-0 opacity-50">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            radial-gradient(2px 2px at 20% 30%, white, transparent),
+            radial-gradient(2px 2px at 60% 70%, white, transparent),
+            radial-gradient(1px 1px at 50% 50%, white, transparent),
+            radial-gradient(1px 1px at 80% 10%, white, transparent),
+            radial-gradient(2px 2px at 90% 60%, white, transparent),
+            radial-gradient(1px 1px at 33% 85%, white, transparent),
+            radial-gradient(1px 1px at 75% 40%, white, transparent)
+          `,
+          backgroundSize: '200% 200%',
+          backgroundPosition: '50% 50%'
+        }} />
+      </div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 border-b border-blue-900/30">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2">
+              <Lock className="h-8 w-8 text-orange-500" fill="currentColor" />
+              <span className="text-xl font-bold text-white">ArtLock</span>
+            </Link>
+
+            {/* Center Nav */}
+            <div className="hidden md:flex items-center gap-8">
+              <Link to="/features" className="text-gray-300 hover:text-white transition-colors">
+                Features
+              </Link>
+              <Link to="/detect" className="text-gray-300 hover:text-white transition-colors">
+                Verify Datasets
+              </Link>
+              <Link to="/marketplace" className="text-gray-300 hover:text-white transition-colors">
+                Marketplace
+              </Link>
+            </div>
+
+            {/* Right Nav */}
+            <div className="flex items-center gap-4">
+              <Link
+                to="/login"
+                className="text-gray-300 hover:text-white transition-colors px-4 py-2"
+              >
+                Log In
+              </Link>
+              <Link
+                to="/login?role=artist"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-colors"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="relative z-10 p-6">
+        <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 pt-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -67,6 +128,7 @@ export default function Features() {
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>
