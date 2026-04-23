@@ -50,7 +50,7 @@ function RevealSection({
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen bg-[#0a0e27] text-white overflow-hidden relative">
+    <div className="min-h-screen bg-artlock-dark text-white overflow-hidden relative">
       {/* Starfield background */}
       <div className="fixed inset-0 opacity-50">
         <div className="absolute inset-0" style={{

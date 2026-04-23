@@ -136,7 +136,7 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] p-6">
+    <div className="min-h-screen bg-artlock-dark p-6">
       <div className="max-w-7xl mx-auto">
         {/* Hero / stats bar */}
         {stats && (

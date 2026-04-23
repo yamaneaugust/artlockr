@@ -19,6 +19,7 @@ export default {
           800: '#5b21b6',
           900: '#4c1d95',
         },
+        'artlock-dark': '#0a0e27',
       },
     },
   },

@@ -21,8 +21,8 @@ export default function Layout() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0a0e27]">
-      <nav className="bg-[#0a0e27] border-b border-blue-900">
+    <div className="min-h-screen bg-artlock-dark">
+      <nav className="bg-artlock-dark border-b border-blue-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2">

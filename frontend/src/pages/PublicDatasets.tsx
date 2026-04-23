@@ -134,7 +134,7 @@ export default function PublicDatasets() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] text-white p-6">
+    <div className="min-h-screen bg-artlock-dark text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">Public Creative Datasets</h1>

@@ -85,8 +85,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center p-4">
-      <div className="bg-[#0a0e27] rounded-2xl shadow-xl w-full max-w-md p-8 border border-blue-900/60">
+    <div className="min-h-screen bg-artlock-dark flex items-center justify-center p-4">
+      <div className="bg-artlock-dark rounded-2xl shadow-xl w-full max-w-md p-8 border border-blue-900/60">
         <div className="flex flex-col items-center mb-8">
           <Lock className="h-10 w-10 text-orange-500 mb-2" fill="currentColor" />
           <h1 className="text-2xl font-bold text-white">ArtLock</h1>
