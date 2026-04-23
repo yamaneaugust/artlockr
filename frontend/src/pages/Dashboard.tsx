@@ -20,7 +20,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="min-h-screen bg-artlock-dark flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     )
@@ -230,5 +230,9 @@ export default function Dashboard() {
     )
   }
 
-  return null
+  return (
+    <div className="min-h-screen bg-artlock-dark flex items-center justify-center text-white">
+      <p>Unable to load dashboard</p>
+    </div>
+  )
 }
