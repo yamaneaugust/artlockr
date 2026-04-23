@@ -32,8 +32,8 @@ export default function PublicDatasets() {
     setLoading(true)
     getPublicDatasets({ work_type: workType || undefined })
       .then(({ data }) => {
-        setEntries(data.items)
-        setTotal(data.total)
+        setEntries(data.items ?? [])
+        setTotal(data.total ?? 0)
       })
       .catch(() => {
         // Backend unreachable - show sample public datasets
@@ -172,7 +172,7 @@ export default function PublicDatasets() {
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
-              <span className="text-sm text-blue-400">{total.toLocaleString()} entries</span>
+              <span className="text-sm text-blue-400">{(total ?? 0).toLocaleString()} entries</span>
             </div>
 
             {loading ? (
@@ -181,7 +181,7 @@ export default function PublicDatasets() {
                   <div key={i} className="bg-blue-900 rounded-xl border border-blue-900/30 h-16 animate-pulse" />
                 ))}
               </div>
-            ) : entries.length === 0 ? (
+            ) : !entries || entries.length === 0 ? (
               <div className="text-center py-20 text-blue-400">
                 <Database className="h-12 w-12 mx-auto mb-3 opacity-40" />
                 <p className="text-lg font-medium text-white">No entries yet</p>
@@ -189,7 +189,7 @@ export default function PublicDatasets() {
               </div>
             ) : (
               <div className="space-y-2">
-                {entries.map((e) => {
+                {(entries ?? []).map((e) => {
                   const Icon = WORK_TYPE_ICONS[e.work_type] ?? Package
                   return (
                     <a
@@ -242,9 +242,9 @@ export default function PublicDatasets() {
               </button>
             </form>
 
-            {wikiResults.length > 0 && (
+            {wikiResults && wikiResults.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {wikiResults.map((r, i) => (
+                {(wikiResults ?? []).map((r, i) => (
                   <a
                     key={i}
                     href={r.url as string}
