@@ -63,30 +63,6 @@ export default function Features() {
             </div>
           ))}
         </div>
-
-        {/* CTA */}
-        <div className="text-center py-12 bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 px-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Ready to get started?
-          </h2>
-          <p className="text-blue-300 mb-8 max-w-xl mx-auto">
-            Join thousands of creators and AI companies building a trustworthy ecosystem for creative data.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/login?role=artist"
-              className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
-            >
-              I'm a Creator
-            </Link>
-            <Link
-              to="/login?role=company"
-              className="px-8 py-4 border border-blue-900/30 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold rounded-lg transition-colors"
-            >
-              I'm an AI Company
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   )
