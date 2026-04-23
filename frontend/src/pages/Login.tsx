@@ -95,7 +95,7 @@ export default function Login() {
 
         {/* Show role badge if pre-selected */}
         {hasPreselectedRole && (
-          <div className="mb-6 p-3 bg-orange-500/10 border border-blue-900/30 rounded-lg text-center">
+          <div className="mb-6 p-3 bg-orange-500/10 rounded-lg text-center">
             <p className="text-sm text-orange-400">
               Signing up as: <span className="font-semibold">{getRoleLabel()}</span>
             </p>
