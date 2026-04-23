@@ -1,10 +1,16 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ShoppingBag, Upload, LayoutDashboard, Database, LogOut, Palette } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function Layout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, logout, isAuthenticated } = useAuthStore()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   const navItems = [
     { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag, always: true },
@@ -57,7 +63,7 @@ export default function Layout() {
                     </span>
                   </span>
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-300 hover:text-white hover:bg-blue-900 rounded-lg transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
