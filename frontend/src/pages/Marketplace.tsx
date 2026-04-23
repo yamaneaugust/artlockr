@@ -138,6 +138,12 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-artlock-dark p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Marketplace</h1>
+          <p className="text-blue-300 mt-2">Browse and license creative works for AI training</p>
+        </div>
+
         {/* Hero / stats bar */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
