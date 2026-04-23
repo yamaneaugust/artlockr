@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast'
 import Layout from './components/Layout'
 import Homepage from './pages/Homepage'
+import Features from './pages/Features'
 import Marketplace from './pages/Marketplace'
 import ListingDetail from './pages/ListingDetail'
 import Upload from './pages/Upload'
@@ -19,6 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/features" element={<Features />} />
         <Route element={<Layout />}>
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/:id" element={<ListingDetail />} />

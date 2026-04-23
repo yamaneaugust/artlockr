@@ -80,9 +80,9 @@ export default function Homepage() {
 
             {/* Center Nav */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-300 hover:text-white transition-colors">
+              <Link to="/features" className="text-gray-300 hover:text-white transition-colors">
                 Features
-              </a>
+              </Link>
               <Link to="/detect" className="text-gray-300 hover:text-white transition-colors">
                 Verify Datasets
               </Link>
@@ -359,7 +359,7 @@ export default function Homepage() {
       </RevealSection>
 
       {/* Features Section */}
-      <section className="relative py-20 px-6 mt-16" id="features">
+      <section className="relative py-20 px-6 mt-16">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
