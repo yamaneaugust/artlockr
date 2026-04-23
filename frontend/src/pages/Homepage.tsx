@@ -72,7 +72,11 @@ export default function Homepage() {
       <nav className="relative z-10 border-b border-blue-900/30">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div></div>
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2">
+              <Lock className="h-8 w-8 text-orange-500" fill="currentColor" />
+              <span className="text-xl font-bold text-white">ArtLock</span>
+            </Link>
 
             {/* Center Nav */}
             <div className="hidden md:flex items-center gap-8">
