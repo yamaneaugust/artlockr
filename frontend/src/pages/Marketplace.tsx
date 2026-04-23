@@ -57,8 +57,8 @@ export default function Marketplace() {
       if (workType) params.work_type = workType
       if (licenseType) params.license_type = licenseType
       const { data } = await getListings(params)
-      setListings(data.items)
-      setTotalPages(data.pages)
+      setListings(data.items ?? [])
+      setTotalPages(data.pages ?? 1)
     } catch {
       // Backend unreachable - show sample listings
       const sampleListings: Listing[] = [
@@ -226,7 +226,7 @@ export default function Marketplace() {
               <div key={i} className="bg-blue-900 rounded-xl border border-blue-900/30 h-64 animate-pulse" />
             ))}
           </div>
-        ) : listings.length === 0 ? (
+        ) : !listings || listings.length === 0 ? (
           <div className="text-center py-24 text-blue-400">
             <Package className="h-12 w-12 mx-auto mb-3 opacity-40" />
             <p className="text-lg font-medium text-white">No listings yet</p>
@@ -234,7 +234,7 @@ export default function Marketplace() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {listings.map((l) => {
+            {(listings ?? []).map((l) => {
               const Icon = WORK_TYPE_ICONS[l.work.work_type] ?? Package
               return (
                 <Link
