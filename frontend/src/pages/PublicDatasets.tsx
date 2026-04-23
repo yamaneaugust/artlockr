@@ -151,7 +151,7 @@ export default function PublicDatasets() {
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 tab === t
                   ? 'bg-orange-500 text-white'
-                  : 'bg-blue-900 border border-blue-800 text-blue-300 hover:bg-blue-800'
+                  : 'bg-blue-900 border border-blue-900/30 text-blue-300 hover:bg-blue-800'
               }`}
             >
               {t === 'catalogue' ? 'Catalogue' : 'Search Wikimedia'}
@@ -165,7 +165,7 @@ export default function PublicDatasets() {
               <select
                 value={workType}
                 onChange={(e) => setWorkType(e.target.value)}
-                className="px-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+                className="px-3 py-2 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="">All types</option>
                 {['image', 'audio', 'video', 'text', 'dataset'].map((t) => (
@@ -178,7 +178,7 @@ export default function PublicDatasets() {
             {loading ? (
               <div className="space-y-2">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-blue-900 rounded-xl border border-blue-800 h-16 animate-pulse" />
+                  <div key={i} className="bg-blue-900 rounded-xl border border-blue-900/30 h-16 animate-pulse" />
                 ))}
               </div>
             ) : entries.length === 0 ? (
@@ -197,7 +197,7 @@ export default function PublicDatasets() {
                       href={e.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 bg-blue-900 rounded-xl border border-blue-800 p-4 hover:border-orange-500 transition-all"
+                      className="flex items-center gap-3 bg-blue-900 rounded-xl border border-blue-900/30 p-4 hover:border-blue-900/30 transition-all"
                     >
                       <Icon className="h-5 w-5 text-orange-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -230,7 +230,7 @@ export default function PublicDatasets() {
                   placeholder="Search Wikimedia Commons…"
                   value={wikiQuery}
                   onChange={(e) => setWikiQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  className="w-full pl-9 pr-3 py-2 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
               <button
@@ -250,7 +250,7 @@ export default function PublicDatasets() {
                     href={r.url as string}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-blue-900 rounded-xl border border-blue-800 overflow-hidden hover:border-orange-500 transition-all group"
+                    className="bg-blue-900 rounded-xl border border-blue-900/30 overflow-hidden hover:border-blue-900/30 transition-all group"
                   >
                     {r.work_type === 'image' && (
                       <div className="h-36 bg-gradient-to-br from-blue-800 to-blue-900 flex items-center justify-center">

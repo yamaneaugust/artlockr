@@ -143,10 +143,10 @@ export default function Upload() {
               {...getRootProps()}
               className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
                 isDragActive
-                  ? 'border-orange-500 bg-orange-500/10'
+                  ? 'border-blue-900/30 bg-orange-500/10'
                   : file
                   ? 'border-green-400 bg-green-400/10'
-                  : 'border-blue-700 bg-blue-900 hover:border-orange-500'
+                  : 'border-blue-900/30 bg-blue-900 hover:border-blue-900/30'
               }`}
             >
               <input {...getInputProps()} />
@@ -172,7 +172,7 @@ export default function Upload() {
                   required
                   value={meta.title}
                   onChange={(e) => setMeta((m) => ({ ...m, title: e.target.value }))}
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
               <div>
@@ -181,7 +181,7 @@ export default function Upload() {
                   rows={3}
                   value={meta.description}
                   onChange={(e) => setMeta((m) => ({ ...m, description: e.target.value }))}
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
                 />
               </div>
               <div>
@@ -192,7 +192,7 @@ export default function Upload() {
                   value={meta.tags}
                   onChange={(e) => setMeta((m) => ({ ...m, tags: e.target.value }))}
                   placeholder="portrait, oil painting, landscape"
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function Upload() {
                   required
                   value={listingForm.title}
                   onChange={(e) => setListingForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                 />
               </div>
               <div>
@@ -225,7 +225,7 @@ export default function Upload() {
                   rows={3}
                   value={listingForm.description}
                   onChange={(e) => setListingForm((f) => ({ ...f, description: e.target.value }))}
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -238,7 +238,7 @@ export default function Upload() {
                     step="0.01"
                     value={listingForm.price}
                     onChange={(e) => setListingForm((f) => ({ ...f, price: e.target.value }))}
-                    className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                    className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                   />
                 </div>
                 <div>
@@ -249,7 +249,7 @@ export default function Upload() {
                     placeholder="Unlimited"
                     value={listingForm.max_buyers}
                     onChange={(e) => setListingForm((f) => ({ ...f, max_buyers: e.target.value }))}
-                    className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
+                    className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 placeholder-blue-500"
                   />
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function Upload() {
                 <select
                   value={listingForm.license_type}
                   onChange={(e) => setListingForm((f) => ({ ...f, license_type: e.target.value }))}
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   {LICENSE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -276,7 +276,7 @@ export default function Upload() {
                     setListingForm((f) => ({ ...f, license_details: e.target.value }))
                   }
                   placeholder="Any specific restrictions or permissions…"
-                  className="w-full px-3 py-2 bg-blue-900 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
+                  className="w-full px-3 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder-blue-500"
                 />
               </div>
             </div>

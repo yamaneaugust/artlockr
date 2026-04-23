@@ -39,15 +39,15 @@ export default function Dashboard() {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <p className="text-blue-400 text-sm mb-1">Active Listings</p>
               <p className="text-3xl font-bold text-white">{(profile?.listing_count as number) || 0}</p>
             </div>
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <p className="text-blue-400 text-sm mb-1">Total Sales</p>
               <p className="text-3xl font-bold text-white">{(profile?.total_sales as number) || 0}</p>
             </div>
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <p className="text-blue-400 text-sm mb-1">Earnings</p>
               <p className="text-3xl font-bold text-orange-500">
                 ${((profile?.total_earnings as number) || 0).toFixed(2)}
@@ -60,7 +60,7 @@ export default function Dashboard() {
             {/* Detect Copyright */}
             <Link
               to="/detect"
-              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 hover:border-blue-900/30 p-8 transition-all hover:scale-105"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
@@ -76,7 +76,7 @@ export default function Dashboard() {
             {/* License & Price */}
             <Link
               to="/upload"
-              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 hover:border-blue-900/30 p-8 transition-all hover:scale-105"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
@@ -92,7 +92,7 @@ export default function Dashboard() {
             {/* Marketplace */}
             <Link
               to="/marketplace"
-              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 hover:border-blue-900/30 p-8 transition-all hover:scale-105"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
@@ -108,7 +108,7 @@ export default function Dashboard() {
 
           {/* Recent Activity */}
           {Array.isArray(profile?.listings) && (profile.listings as unknown[]).length > 0 && (
-            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <h2 className="text-xl font-bold text-white mb-4">Your Recent Listings</h2>
               <div className="space-y-3">
                 {(profile.listings as Record<string, unknown>[]).slice(0, 5).map((listing) => (
@@ -151,11 +151,11 @@ export default function Dashboard() {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <p className="text-blue-400 text-sm mb-1">Total Purchases</p>
               <p className="text-3xl font-bold text-white">{(profile?.total_purchases as number) || 0}</p>
             </div>
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <p className="text-blue-400 text-sm mb-1">Total Spent</p>
               <p className="text-3xl font-bold text-orange-500">
                 ${((profile?.total_spent as number) || 0).toFixed(2)}
@@ -168,7 +168,7 @@ export default function Dashboard() {
             {/* Create Request */}
             <Link
               to="/requests/create"
-              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 hover:border-orange-500 p-8 transition-all hover:scale-105"
+              className="group bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 hover:border-blue-900/30 p-8 transition-all hover:scale-105"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:bg-orange-500/30 transition-colors">
@@ -182,7 +182,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Browse Recommended Deals */}
-            <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border-2 border-blue-700 p-8">
+            <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl border border-blue-900/30 p-8">
               <div className="flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
                   <TrendingUp className="w-8 h-8 text-orange-500" />
@@ -197,7 +197,7 @@ export default function Dashboard() {
 
           {/* Recent Purchases */}
           {Array.isArray(profile?.recent_purchases) && (profile.recent_purchases as unknown[]).length > 0 && (
-            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-800 p-6">
+            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">Recent Purchases</h2>
                 <Link to="/purchases" className="text-orange-400 hover:text-orange-300 text-sm">

@@ -38,7 +38,7 @@ export default function Purchases() {
       <div className="min-h-screen bg-blue-950 p-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-blue-900 rounded-xl border border-blue-800 h-24 animate-pulse" />
+            <div key={i} className="bg-blue-900 rounded-xl border border-blue-900/30 h-24 animate-pulse" />
           ))}
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function Purchases() {
         ) : (
           <div className="space-y-4">
             {purchases.map((p) => (
-              <div key={p.id} className="bg-blue-900 rounded-xl border border-blue-800 p-5">
+              <div key={p.id} className="bg-blue-900 rounded-xl border border-blue-900/30 p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export default function Purchases() {
                   </div>
                   <button
                     onClick={() => copyKey(p.license_key)}
-                    className="px-3 py-2 text-sm font-medium text-orange-500 border border-orange-500/30 rounded-lg hover:bg-orange-500/10 transition-colors whitespace-nowrap"
+                    className="px-3 py-2 text-sm font-medium text-orange-500 border border-blue-900/30 rounded-lg hover:bg-orange-500/10 transition-colors whitespace-nowrap"
                   >
                     Copy key
                   </button>

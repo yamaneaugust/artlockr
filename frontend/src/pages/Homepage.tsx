@@ -69,7 +69,7 @@ export default function Homepage() {
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 border-b border-blue-900/50">
+      <nav className="relative z-10 border-b border-blue-900/30">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -138,7 +138,7 @@ export default function Homepage() {
                 </Link>
                 <Link
                   to="/login?role=company"
-                  className="px-8 py-4 border-2 border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold rounded-lg transition-colors"
+                  className="px-8 py-4 border border-blue-900/30 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold rounded-lg transition-colors"
                 >
                   I'm an AI Company
                 </Link>
@@ -149,7 +149,7 @@ export default function Homepage() {
             <div className="hidden md:block relative h-96">
               <div className="absolute inset-0">
                 {/* Main fingerprint hologram screen */}
-                <div className="absolute top-0 right-0 w-80 h-72 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-72 border border-blue-900/30 rounded-2xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
                   {/* Fingerprint glow */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32">
                     <div className="absolute inset-0 rounded-full bg-gradient-radial from-orange-500 via-orange-400 to-transparent opacity-80 blur-xl" />
@@ -181,7 +181,7 @@ export default function Homepage() {
                 </div>
 
                 {/* Smaller screen accent */}
-                <div className="absolute bottom-8 left-0 w-40 h-32 border border-orange-500/30 rounded-xl bg-gradient-to-tl from-orange-500/10 to-transparent transform -rotate-12" />
+                <div className="absolute bottom-8 left-0 w-40 h-32 border border-blue-900/30 rounded-xl bg-gradient-to-tl from-orange-500/10 to-transparent transform -rotate-12" />
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function Homepage() {
         {/* Background holographic key ring */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Left: floating key card */}
-          <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 w-40 h-52 border-2 border-orange-500/30 rounded-2xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform -rotate-12 shadow-2xl shadow-orange-500/20">
+          <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 w-40 h-52 border border-blue-900/30 rounded-2xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform -rotate-12 shadow-2xl shadow-orange-500/20">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <Lock className="w-14 h-14 text-orange-400" strokeWidth={1.5} />
             </div>
@@ -204,7 +204,7 @@ export default function Homepage() {
           </div>
 
           {/* Right: floating fingerprint card */}
-          <div className="absolute top-1/2 right-8 md:right-20 -translate-y-1/2 w-44 h-52 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
+          <div className="absolute top-1/2 right-8 md:right-20 -translate-y-1/2 w-44 h-52 border border-blue-900/30 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24">
               <div className="absolute inset-0 rounded-full bg-gradient-radial from-orange-500 via-orange-400 to-transparent opacity-70 blur-lg" />
               <div className="absolute inset-1 rounded-full" style={{
@@ -237,7 +237,7 @@ export default function Homepage() {
         {/* Background holographic data screens */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Left: data chart card */}
-          <div className="absolute top-1/2 left-8 md:left-24 -translate-y-1/2 w-48 h-56 border border-orange-500/30 rounded-2xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent backdrop-blur-sm transform -rotate-6 shadow-xl shadow-orange-500/20">
+          <div className="absolute top-1/2 left-8 md:left-24 -translate-y-1/2 w-48 h-56 border border-blue-900/30 rounded-2xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent backdrop-blur-sm transform -rotate-6 shadow-xl shadow-orange-500/20">
             <div className="p-4 space-y-2 opacity-70">
               <div className="flex items-end gap-1.5 h-24">
                 <div className="w-3 bg-orange-500/60 h-10 rounded-t" />
@@ -256,7 +256,7 @@ export default function Homepage() {
           </div>
 
           {/* Right: verification card */}
-          <div className="absolute top-1/2 right-8 md:right-24 -translate-y-1/2 w-44 h-56 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
+          <div className="absolute top-1/2 right-8 md:right-24 -translate-y-1/2 w-44 h-56 border border-blue-900/30 rounded-2xl bg-gradient-to-bl from-orange-500/10 via-transparent to-blue-900/20 backdrop-blur-sm transform rotate-6 shadow-2xl shadow-orange-500/30 overflow-hidden">
             <div className="absolute top-3 left-3 right-3 space-y-1 opacity-40">
               <div className="h-0.5 bg-orange-400/60 w-3/4" />
               <div className="h-0.5 bg-orange-400/40 w-1/2" />
@@ -304,7 +304,7 @@ export default function Homepage() {
         {/* Holographic code windows background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Left terminal window */}
-          <div className="absolute bottom-4 left-12 w-48 h-56 border-2 border-orange-500/30 rounded-xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent transform -rotate-12">
+          <div className="absolute bottom-4 left-12 w-48 h-56 border border-blue-900/30 rounded-xl bg-gradient-to-br from-orange-900/20 via-blue-900/10 to-transparent transform -rotate-12">
             <div className="p-3 space-y-1 opacity-60">
               <div className="h-1 bg-orange-400/70 w-3/4 rounded" />
               <div className="h-1 bg-orange-400/50 w-1/2 rounded" />
@@ -316,7 +316,7 @@ export default function Homepage() {
           </div>
 
           {/* Center main code window */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-96 h-72 border-2 border-orange-500/40 rounded-2xl bg-gradient-to-br from-orange-900/30 via-blue-900/20 to-transparent transform rotate-3 shadow-2xl shadow-orange-500/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-96 h-72 border border-blue-900/30 rounded-2xl bg-gradient-to-br from-orange-900/30 via-blue-900/20 to-transparent transform rotate-3 shadow-2xl shadow-orange-500/20">
             <div className="p-4 space-y-1.5 opacity-70 font-mono text-xs">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-orange-500/60" />
@@ -330,7 +330,7 @@ export default function Homepage() {
               <div className="h-1 bg-orange-400/60 w-52 rounded" />
             </div>
             {/* Chat bubble icon */}
-            <div className="absolute bottom-4 right-4 w-10 h-10 border-2 border-orange-500/60 rounded-lg flex items-center justify-center">
+            <div className="absolute bottom-4 right-4 w-10 h-10 border border-blue-900/30 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -338,7 +338,7 @@ export default function Homepage() {
           </div>
 
           {/* Right small window with chart */}
-          <div className="absolute bottom-8 right-16 w-44 h-48 border border-orange-500/30 rounded-xl bg-gradient-to-tl from-orange-900/20 via-blue-900/10 to-transparent transform rotate-6">
+          <div className="absolute bottom-8 right-16 w-44 h-48 border border-blue-900/30 rounded-xl bg-gradient-to-tl from-orange-900/20 via-blue-900/10 to-transparent transform rotate-6">
             <div className="p-3 space-y-2 opacity-60">
               {/* Simulated bar chart */}
               <div className="flex items-end gap-1 h-24">
@@ -371,7 +371,7 @@ export default function Homepage() {
               <Link key={title} to="/login" className="text-center group cursor-pointer">
                 <div className="mb-4 flex justify-center">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-600/30 to-orange-800/20 border-2 border-orange-500/40 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-600/30 to-orange-800/20 border border-blue-900/30 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/20">
                       <Icon className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
                     </div>
                     <div className="absolute inset-0 bg-orange-500/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -385,7 +385,7 @@ export default function Homepage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-blue-900/50 py-8 px-6 mt-20 relative z-10">
+      <footer className="border-t border-blue-900/30 py-8 px-6 mt-20 relative z-10">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-gray-500">© 2026 ArtLock.</p>
         </div>

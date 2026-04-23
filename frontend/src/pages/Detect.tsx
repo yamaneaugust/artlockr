@@ -107,10 +107,10 @@ export default function Detect() {
               {...getRootProps()}
               className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
                 isDragActive
-                  ? 'border-orange-500 bg-orange-500/10'
+                  ? 'border-blue-900/30 bg-orange-500/10'
                   : file
                   ? 'border-green-400 bg-green-400/10'
-                  : 'border-blue-700 bg-blue-900 hover:border-orange-500 hover:bg-orange-500/5'
+                  : 'border-blue-900/30 bg-blue-900 hover:border-blue-900/30 hover:bg-orange-500/5'
               }`}
             >
               <input {...getInputProps()} />
@@ -155,7 +155,7 @@ export default function Detect() {
               )}
             </button>
 
-            <div className="bg-blue-900 rounded-xl border border-blue-800 p-4">
+            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-4">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <div>
@@ -205,7 +205,7 @@ export default function Detect() {
 
             {/* Matches */}
             {result.matches.length > 0 && (
-              <div className="bg-blue-900 rounded-xl border border-blue-800 p-5">
+              <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-5">
                 <h3 className="text-white font-bold mb-3">Matches Found</h3>
                 <div className="space-y-3">
                   {result.matches.map((m, i) => (
@@ -227,7 +227,7 @@ export default function Detect() {
 
             <button
               onClick={reset}
-              className="w-full py-3 bg-blue-900 hover:bg-blue-800 border border-blue-700 text-white font-medium rounded-xl transition-colors"
+              className="w-full py-3 bg-blue-900 hover:bg-blue-800 border border-blue-900/30 text-white font-medium rounded-xl transition-colors"
             >
               Scan Another File
             </button>

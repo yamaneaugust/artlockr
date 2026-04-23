@@ -95,7 +95,7 @@ export default function Login() {
 
         {/* Show role badge if pre-selected */}
         {hasPreselectedRole && (
-          <div className="mb-6 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg text-center">
+          <div className="mb-6 p-3 bg-orange-500/10 border border-blue-900/30 rounded-lg text-center">
             <p className="text-sm text-orange-400">
               Signing up as: <span className="font-semibold">{getRoleLabel()}</span>
             </p>
@@ -125,7 +125,7 @@ export default function Login() {
               type="text"
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
-              className={`w-full px-3 py-2 bg-[#050823] border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500 ${emailError ? 'border-red-500' : 'border-blue-700'}`}
+              className={`w-full px-3 py-2 bg-[#050823] border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500 ${emailError ? 'border-red-500' : 'border-blue-900/30'}`}
             />
             {emailError && (
               <p className="mt-1 text-sm text-red-400">{emailError}</p>
@@ -140,7 +140,7 @@ export default function Login() {
                 required
                 value={form.username}
                 onChange={(e) => update('username', e.target.value)}
-                className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+                className="w-full px-3 py-2 bg-[#050823] border border-blue-900/30 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
           )}
@@ -152,7 +152,7 @@ export default function Login() {
               required
               value={form.password}
               onChange={(e) => update('password', e.target.value)}
-              className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+              className="w-full px-3 py-2 bg-[#050823] border border-blue-900/30 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
             />
           </div>
 
@@ -173,8 +173,8 @@ export default function Login() {
                     onClick={() => update('role', value)}
                     className={`p-3 rounded-lg border-2 text-left transition-colors ${
                       form.role === value
-                        ? 'border-orange-500 bg-orange-500/10'
-                        : 'border-blue-700 hover:border-blue-500'
+                        ? 'border-blue-900/30 bg-orange-500/10'
+                        : 'border-blue-900/30 hover:border-blue-500'
                     }`}
                   >
                     <p className={`text-sm font-semibold ${form.role === value ? 'text-orange-400' : 'text-white'}`}>
@@ -197,7 +197,7 @@ export default function Login() {
                 required
                 value={form.company_name}
                 onChange={(e) => update('company_name', e.target.value)}
-                className="w-full px-3 py-2 bg-[#050823] border border-blue-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+                className="w-full px-3 py-2 bg-[#050823] border border-blue-900/30 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
           )}

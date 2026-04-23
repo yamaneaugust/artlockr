@@ -147,7 +147,7 @@ export default function Marketplace() {
               { label: 'Companies', value: stats.total_companies },
               { label: 'Volume (USD)', value: `$${stats.total_volume_usd.toFixed(0)}` },
             ].map((s) => (
-              <div key={s.label} className="bg-blue-900 rounded-xl border border-blue-800 p-4 text-center">
+              <div key={s.label} className="bg-blue-900 rounded-xl border border-blue-900/30 p-4 text-center">
                 <p className="text-2xl font-bold text-orange-500">{s.value}</p>
                 <p className="text-xs text-blue-300 mt-0.5">{s.label}</p>
               </div>
@@ -156,7 +156,7 @@ export default function Marketplace() {
         )}
 
         {/* Search + filters */}
-        <div className="bg-blue-900 rounded-xl border border-blue-800 p-4 mb-6">
+        <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-4 mb-6">
           <form onSubmit={handleSearch} className="flex gap-2 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
@@ -165,7 +165,7 @@ export default function Marketplace() {
                 placeholder="Search titles, descriptions, tags…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
+                className="w-full pl-9 pr-3 py-2 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-blue-500"
               />
             </div>
             <button
@@ -181,7 +181,7 @@ export default function Marketplace() {
             <select
               value={workType}
               onChange={(e) => { setWorkType(e.target.value); setPage(1) }}
-              className="px-3 py-1.5 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-1.5 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="">All types</option>
               {['image', 'audio', 'video', 'text', 'dataset'].map((t) => (
@@ -192,7 +192,7 @@ export default function Marketplace() {
             <select
               value={licenseType}
               onChange={(e) => { setLicenseType(e.target.value); setPage(1) }}
-              className="px-3 py-1.5 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-1.5 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="">All licenses</option>
               {['cc0', 'cc_by', 'non_exclusive', 'exclusive', 'custom'].map((l) => (
@@ -203,7 +203,7 @@ export default function Marketplace() {
             <select
               value={sortBy}
               onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
-              className="px-3 py-1.5 bg-blue-950 border border-blue-700 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-1.5 bg-blue-950 border border-blue-900/30 text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="created_at">Newest</option>
               <option value="price_asc">Price: low → high</option>
@@ -217,7 +217,7 @@ export default function Marketplace() {
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="bg-blue-900 rounded-xl border border-blue-800 h-64 animate-pulse" />
+              <div key={i} className="bg-blue-900 rounded-xl border border-blue-900/30 h-64 animate-pulse" />
             ))}
           </div>
         ) : listings.length === 0 ? (
@@ -234,7 +234,7 @@ export default function Marketplace() {
                 <Link
                   key={l.id}
                   to={`/marketplace/${l.id}`}
-                  className="bg-blue-900 rounded-xl border border-blue-800 hover:border-orange-500 transition-all overflow-hidden group"
+                  className="bg-blue-900 rounded-xl border border-blue-900/30 hover:border-blue-900/30 transition-all overflow-hidden group"
                 >
                   <div className="h-40 bg-gradient-to-br from-blue-800 to-blue-900 flex items-center justify-center">
                     {l.work.preview_url ? (
@@ -280,7 +280,7 @@ export default function Marketplace() {
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-4 py-2 bg-blue-900 border border-blue-800 text-white rounded-lg text-sm disabled:opacity-40 hover:bg-blue-800"
+              className="px-4 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm disabled:opacity-40 hover:bg-blue-800"
             >
               Previous
             </button>
@@ -290,7 +290,7 @@ export default function Marketplace() {
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-4 py-2 bg-blue-900 border border-blue-800 text-white rounded-lg text-sm disabled:opacity-40 hover:bg-blue-800"
+              className="px-4 py-2 bg-blue-900 border border-blue-900/30 text-white rounded-lg text-sm disabled:opacity-40 hover:bg-blue-800"
             >
               Next
             </button>
