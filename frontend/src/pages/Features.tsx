@@ -1,4 +1,4 @@
-import { Camera, FileCheck, Search, FileText } from 'lucide-react'
+import { Camera, FileCheck, Search, FileText, ShoppingBag } from 'lucide-react'
 
 export default function Features() {
   return (
@@ -41,6 +41,12 @@ export default function Features() {
               title: 'Generate Audit Reports',
               description:
                 'Create comprehensive audit trails and provenance reports for compliance. Perfect for AI companies that need transparent, auditable licensing documentation.',
+            },
+            {
+              icon: ShoppingBag,
+              title: 'Buy Legal Data',
+              description:
+                'Access a curated marketplace of properly licensed creative works for AI training. Browse verified datasets with transparent licensing and full provenance documentation.',
             },
           ].map(({ icon: Icon, title, description }) => (
             <div

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Lock, Camera, FileCheck, Search, FileText } from 'lucide-react'
+import { Lock, Camera, FileCheck, Search, FileText, ShoppingBag } from 'lucide-react'
 
 function useInView<T extends HTMLElement>(options?: IntersectionObserverInit) {
   const ref = useRef<T | null>(null)
@@ -361,12 +361,13 @@ export default function Homepage() {
       {/* Features Section */}
       <section className="relative py-20 px-6 mt-16">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
             {[
               { icon: Camera, title: 'Register Your Work' },
               { icon: FileCheck, title: 'Define Licensing Rules' },
               { icon: Search, title: 'Verify Datasets' },
               { icon: FileText, title: 'Generate Audit Reports' },
+              { icon: ShoppingBag, title: 'Buy Legal Data' },
             ].map(({ icon: Icon, title }) => (
               <Link key={title} to="/login" className="text-center group cursor-pointer">
                 <div className="mb-4 flex justify-center">
