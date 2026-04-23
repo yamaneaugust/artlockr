@@ -139,7 +139,7 @@ export default function PublicDatasets() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">Public Creative Datasets</h1>
           <p className="text-blue-300 mt-2">
-            Freely-licensed works discovered from Common Crawl, Wikimedia Commons, and more.
+            Freely-licensed works discovered from Common Crawl, Wikimedia Commons, and more. AI companies can verify their training data against this catalogue to ensure proper licensing.
           </p>
         </div>
 

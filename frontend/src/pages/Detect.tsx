@@ -96,7 +96,7 @@ export default function Detect() {
             Detect Copyright
           </h1>
           <p className="text-blue-300 mt-2">
-            Upload your artwork to check if it has been used without your permission in AI training datasets.
+            Artists: Upload your artwork to check if it has been used without your permission in AI training datasets. AI Companies: Upload compressed samples from your training data to verify proper licensing and avoid copyright issues.
           </p>
         </div>
 
