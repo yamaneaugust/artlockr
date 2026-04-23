@@ -148,10 +148,10 @@ export default function Marketplace() {
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Listings', value: stats.total_listings },
-              { label: 'Artists', value: stats.total_artists },
-              { label: 'Companies', value: stats.total_companies },
-              { label: 'Volume (USD)', value: `$${stats.total_volume_usd.toFixed(0)}` },
+              { label: 'Listings', value: stats.total_listings ?? 0 },
+              { label: 'Artists', value: stats.total_artists ?? 0 },
+              { label: 'Companies', value: stats.total_companies ?? 0 },
+              { label: 'Volume (USD)', value: `$${(stats.total_volume_usd ?? 0).toFixed(0)}` },
             ].map((s) => (
               <div key={s.label} className="bg-blue-900 rounded-xl border border-blue-900/30 p-4 text-center">
                 <p className="text-2xl font-bold text-orange-500">{s.value}</p>
@@ -263,7 +263,7 @@ export default function Marketplace() {
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-sm font-bold text-orange-500">
-                        ${l.price.toFixed(2)}
+                        ${(l.price ?? 0).toFixed(2)}
                       </span>
                       <span
                         className={`text-xs px-1.5 py-0.5 rounded font-medium ${
