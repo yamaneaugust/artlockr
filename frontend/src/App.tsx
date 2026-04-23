@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import Homepage from './pages/Homepage'
 import Features from './pages/Features'
@@ -15,13 +16,14 @@ import { useAuthStore } from './store/authStore'
 
 function App() {
   return (
-    <Router>
-      <Toaster position="top-right" />
-      <Routes>
-        <Route path="/" element={<Homepage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/features" element={<Features />} />
-        <Route element={<Layout />}>
+    <ErrorBoundary>
+      <Router>
+        <Toaster position="top-right" />
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/features" element={<Features />} />
+          <Route element={<Layout />}>
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/:id" element={<ListingDetail />} />
           <Route path="/datasets" element={<PublicDatasets />} />
@@ -60,6 +62,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </ErrorBoundary>
   )
 }
 
