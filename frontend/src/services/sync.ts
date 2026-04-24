@@ -116,3 +116,33 @@ export async function syncFetchStats(): Promise<Record<string, unknown> | null> 
     return null
   }
 }
+
+// ── Copyright Detection ───────────────────────────────────────────────
+
+export interface CopyrightMatch {
+  source: string
+  url: string
+  similarity: number
+}
+
+export interface CopyrightResult {
+  status: 'clean' | 'match_found' | 'uncertain'
+  confidence: number
+  matches: CopyrightMatch[]
+  message: string
+  scanned_works?: number
+}
+
+export async function detectCopyright(payload: {
+  image_data: string
+  filename: string
+  file_size: number
+  file_type: string
+}): Promise<CopyrightResult> {
+  const { data } = await sync.post('/api/v1/copyright/detect', payload, {
+    timeout: 45000,
+  })
+  return data
+}
+
+export const COPYRIGHT_BACKEND_URL = BACKEND

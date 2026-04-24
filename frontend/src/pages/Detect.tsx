@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Search, Upload, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { detectCopyright } from '../services/sync'
 
 type ResultStatus = 'clean' | 'match_found' | 'uncertain'
 
@@ -81,56 +82,20 @@ export default function Detect() {
 
       // Call backend for perceptual hash-based similarity detection
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || 'https://backend-production-2e5d.up.railway.app'}/api/v1/copyright/detect`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              image_data: imageData,
-              filename: file.name,
-              file_size: file.size,
-              file_type: file.type,
-            }),
-            signal: AbortSignal.timeout(45000),
-          },
-        )
+        const data = await detectCopyright({
+          image_data: imageData,
+          filename: file.name,
+          file_size: file.size,
+          file_type: file.type,
+        })
 
-        if (res.ok) {
-          const data = await res.json()
-
-          // Backend returns: { status, confidence, matches: [{source, url, similarity}], message }
-          if (data.matches && Array.isArray(data.matches)) {
-            const maxSim = data.matches.length > 0
-              ? Math.max(...data.matches.map((m: { similarity: number }) => m.similarity))
-              : 0
-
-            setResult({
-              status: data.status || (maxSim >= 0.9 ? 'match_found' : maxSim >= 0.6 ? 'uncertain' : 'clean'),
-              confidence: data.confidence || maxSim,
-              matches: data.matches,
-              message: data.message || (
-                maxSim >= 0.9
-                  ? 'High confidence match found on the web. This image appears elsewhere online.'
-                  : maxSim >= 0.6
-                  ? `Potential match detected with ${(maxSim * 100).toFixed(0)}% similarity. Review the sources below.`
-                  : 'No similar images found on the web. This appears to be original or not widely distributed.'
-              ),
-            })
-            toast.success('Web scan complete')
-          } else {
-            // No matches found
-            setResult({
-              status: 'clean',
-              confidence: 0.95,
-              matches: [],
-              message: 'No similar images found on the web. This appears to be original or not widely distributed.',
-            })
-            toast.success('Scan complete - no matches found')
-          }
-        } else {
-          throw new Error(`Backend returned ${res.status}`)
-        }
+        setResult({
+          status: data.status,
+          confidence: data.confidence,
+          matches: data.matches || [],
+          message: data.message,
+        })
+        toast.success('Scan complete')
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err)
         console.error('Backend detection failed:', err)
