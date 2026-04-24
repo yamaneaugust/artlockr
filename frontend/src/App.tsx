@@ -10,6 +10,7 @@ import Upload from './pages/Upload'
 import Purchases from './pages/Purchases'
 import PublicDatasets from './pages/PublicDatasets'
 import Dashboard from './pages/Dashboard'
+import CreateRequest from './pages/CreateRequest'
 import Login from './pages/Login'
 import Detect from './pages/Detect'
 import { useAuthStore } from './store/authStore'
@@ -56,6 +57,14 @@ function App() {
             element={
               <Protected role="company">
                 <Purchases />
+              </Protected>
+            }
+          />
+          <Route
+            path="/requests/create"
+            element={
+              <Protected role="company">
+                <CreateRequest />
               </Protected>
             }
           />
