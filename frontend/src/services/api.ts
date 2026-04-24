@@ -26,7 +26,18 @@ function getApiBaseUrl(): string {
       return `https://${backendHostname}`
     }
 
-    // Fallback: assume backend is on same origin
+    // For custom domains, try common API subdomain patterns
+    if (!hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
+      // Try api.domain.com pattern
+      if (!hostname.startsWith('api.')) {
+        const apiHostname = `api.${hostname}`
+        console.log(`🔍 Trying API subdomain: ${apiHostname}`)
+        return `https://${apiHostname}`
+      }
+    }
+
+    // Fallback: assume backend is on same origin (will likely fail with 405)
+    console.warn('⚠️ Could not detect backend URL, using same origin. Set VITE_API_URL environment variable.')
     return window.location.origin
   }
 
