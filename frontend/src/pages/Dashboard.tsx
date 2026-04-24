@@ -13,15 +13,16 @@ export default function Dashboard() {
     try {
       const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
       const purchases = JSON.parse(localStorage.getItem('artlock-purchases') || '[]')
-      return { listings, purchases }
+      const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
+      return { listings, purchases, works }
     } catch {
-      return { listings: [], purchases: [] }
+      return { listings: [], purchases: [], works: [] }
     }
   }
 
   useEffect(() => {
     if (!user) return
-    const { listings, purchases } = loadLocalData()
+    const { listings, purchases, works } = loadLocalData()
 
     // Filter local data by current user
     const userListings = listings.filter(
@@ -30,6 +31,9 @@ export default function Dashboard() {
     )
     const userPurchases = purchases.filter(
       (p: { buyer_id?: number }) => p.buyer_id === user.id,
+    )
+    const userWorks = works.filter(
+      (w: { owner_id?: number }) => w.owner_id === user.id,
     )
 
     const fetch = user.role === 'artist' ? getArtistProfile : getCompanyProfile
@@ -50,6 +54,7 @@ export default function Dashboard() {
               0,
             ),
             listings: [...userListings, ...(data.listings || [])],
+            works: userWorks,
           })
         } else {
           setProfile({
@@ -88,6 +93,7 @@ export default function Dashboard() {
               0,
             ),
             listings: userListings,
+            works: userWorks,
           })
         } else {
           setProfile({
@@ -199,7 +205,64 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Recent Activity */}
+          {/* Uploaded Works with Timestamps */}
+          {Array.isArray(profile?.works) && (profile.works as unknown[]).length > 0 && (
+            <div className="mt-8 bg-blue-900 rounded-xl border border-blue-900/30 p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Your Uploaded Works</h2>
+              <div className="space-y-3">
+                {(profile.works as Record<string, unknown>[])
+                  .sort((a, b) => {
+                    const timeA = new Date(a.created_at as string).getTime()
+                    const timeB = new Date(b.created_at as string).getTime()
+                    return timeB - timeA
+                  })
+                  .slice(0, 10)
+                  .map((work) => {
+                    const uploadDate = new Date(work.created_at as string)
+                    return (
+                      <div
+                        key={work.id as number}
+                        className="p-4 bg-blue-950 rounded-lg"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-white font-medium">{work.title as string}</p>
+                            <p className="text-blue-400 text-sm mt-1">
+                              {work.work_type as string} · {(work.file_size as number / 1024).toFixed(0)} KB
+                            </p>
+                            <div className="mt-2 flex items-center gap-4">
+                              <div className="text-xs">
+                                <span className="text-blue-500">Uploaded:</span>{' '}
+                                <span className="text-orange-400 font-medium">
+                                  {uploadDate.toLocaleDateString()} at {uploadDate.toLocaleTimeString()}
+                                </span>
+                              </div>
+                              {work.file_hash && (
+                                <div className="text-xs">
+                                  <span className="text-blue-500">Hash:</span>{' '}
+                                  <code className="text-orange-400 font-mono">
+                                    {(work.file_hash as string).substring(0, 12)}...
+                                  </code>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {work.preview_url && (
+                            <img
+                              src={work.preview_url as string}
+                              alt={work.title as string}
+                              className="w-16 h-16 rounded-lg object-cover ml-4"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Listings */}
           {Array.isArray(profile?.listings) && (profile.listings as unknown[]).length > 0 && (
             <div className="mt-8 bg-blue-900 rounded-xl border border-blue-900/30 p-6">
               <h2 className="text-xl font-bold text-white mb-4">Your Recent Listings</h2>

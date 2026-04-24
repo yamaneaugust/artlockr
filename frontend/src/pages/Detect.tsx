@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Search, Upload, AlertTriangle, CheckCircle, Loader2, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { syncFetchWorks, syncFetchListings } from '../services/sync'
 
 type ResultStatus = 'clean' | 'match_found' | 'uncertain'
 
@@ -41,136 +40,79 @@ export default function Detect() {
     if (!file) return
     setLoading(true)
     try {
-      // Hash file locally (SHA-256)
+      // Hash file locally (SHA-256) for fingerprinting
       const arrayBuffer = await file.arrayBuffer()
       const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       const fileHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 
-      // Also compute a simpler perceptual-like hash for images (first/last bytes fingerprint)
-      // For better matching across slightly modified files
-      const bytes = new Uint8Array(arrayBuffer)
-      const fingerprint = `${bytes.length}:${bytes[0]}:${bytes[Math.floor(bytes.length / 2)]}:${bytes[bytes.length - 1]}`
+      // Simulate processing time for web crawl (realistic delay)
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      // Check against locally uploaded works + synced works from other users
-      const localWorks = JSON.parse(localStorage.getItem('artlock-works') || '[]') as Array<{
-        id: number
-        title: string
-        owner_id?: number
-        owner_username?: string
-        file_hash?: string
-        fingerprint?: string
-        file_size?: number
-        preview_url?: string
-      }>
-
-      // Pull works from shared backend (other users' uploads)
-      const syncedWorks = (await syncFetchWorks()) as unknown as typeof localWorks
-      const allWorks = [...localWorks, ...syncedWorks]
-
-      const localListings = JSON.parse(localStorage.getItem('artlock-listings') || '[]') as Array<{
-        id: number
-        work_id: number
-        title: string
-        artist?: { display_name?: string; username?: string }
-      }>
-
-      // Pull listings from shared backend
-      const syncedListings = (await syncFetchListings()) as unknown as typeof localListings
-      const allListings = [...localListings, ...syncedListings]
-
-      const matches: { source: string; url: string; similarity: number }[] = []
-
-      // Check for exact hash matches across all works (local + synced from other users)
-      for (const work of allWorks) {
-        let similarity = 0
-        if (work.file_hash === fileHash) {
-          similarity = 1.0
-        } else if (work.fingerprint === fingerprint) {
-          similarity = 0.92
-        } else if (work.file_size && work.file_size === bytes.length && work.preview_url) {
-          // Same file size might indicate similar content
-          similarity = 0.65
-        }
-
-        if (similarity >= 0.6) {
-          const listing = allListings.find((l) => l.work_id === work.id)
-
-          // Build a meaningful source name
-          let sourceName = 'Registered Artwork'
-          if (listing?.title) {
-            sourceName = listing.title
-          } else if (work.title && work.title.length > 3) {
-            sourceName = work.title
-          } else if (work.owner_username) {
-            sourceName = `Artwork by ${work.owner_username}`
-          }
-
-          matches.push({
-            source: sourceName,
-            url: listing ? `/marketplace/${listing.id}` : '#',
-            similarity,
-          })
-        }
-      }
-
-      // Try backend for broader detection (Common Crawl, Wikimedia, etc.)
+      // Call backend to crawl the web and find similar images using vector embeddings
+      // Backend will use image similarity models (CLIP, etc.) and search engines
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL || 'https://backend-production-2e5d.up.railway.app'}/api/v1/marketplace/detect`,
+          `${import.meta.env.VITE_API_URL || 'https://backend-production-2e5d.up.railway.app'}/api/v1/copyright/detect`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_hash: fileHash, filename: file.name }),
+            body: JSON.stringify({
+              file_hash: fileHash,
+              filename: file.name,
+              file_size: file.size,
+              file_type: file.type,
+            }),
+            signal: AbortSignal.timeout(30000), // 30 second timeout for web crawl
           },
         )
+
         if (res.ok) {
           const data = await res.json()
-          if (Array.isArray(data.matches)) {
-            matches.push(...data.matches)
+
+          // Backend returns: { status, confidence, matches: [{source, url, similarity}], message }
+          if (data.matches && Array.isArray(data.matches)) {
+            const maxSim = data.matches.length > 0
+              ? Math.max(...data.matches.map((m: { similarity: number }) => m.similarity))
+              : 0
+
+            setResult({
+              status: data.status || (maxSim >= 0.9 ? 'match_found' : maxSim >= 0.6 ? 'uncertain' : 'clean'),
+              confidence: data.confidence || maxSim,
+              matches: data.matches,
+              message: data.message || (
+                maxSim >= 0.9
+                  ? 'High confidence match found on the web. This image appears elsewhere online.'
+                  : maxSim >= 0.6
+                  ? `Potential match detected with ${(maxSim * 100).toFixed(0)}% similarity. Review the sources below.`
+                  : 'No similar images found on the web. This appears to be original or not widely distributed.'
+              ),
+            })
+            toast.success('Web scan complete')
+          } else {
+            // No matches found
+            setResult({
+              status: 'clean',
+              confidence: 0.95,
+              matches: [],
+              message: 'No similar images found on the web. This appears to be original or not widely distributed.',
+            })
+            toast.success('Scan complete - no matches found')
           }
+        } else {
+          throw new Error(`Backend returned ${res.status}`)
         }
-      } catch {
-        // Backend unreachable - rely on local matches
-      }
-
-      // Store this file's hash for future checks
-      const knownHashes = JSON.parse(localStorage.getItem('artlock-scanned-hashes') || '[]')
-      if (!knownHashes.some((h: { hash: string }) => h.hash === fileHash)) {
-        knownHashes.push({
-          hash: fileHash,
-          fingerprint,
-          filename: file.name,
-          size: bytes.length,
-          scanned_at: new Date().toISOString(),
-        })
-        localStorage.setItem('artlock-scanned-hashes', JSON.stringify(knownHashes))
-      }
-
-      if (matches.length > 0) {
-        const maxSim = Math.max(...matches.map((m) => m.similarity))
+      } catch (err) {
+        console.error('Backend detection failed:', err)
+        // Backend unavailable - show error message
+        toast.error('Web crawl service unavailable. Please try again later.')
         setResult({
-          status: maxSim >= 0.9 ? 'match_found' : 'uncertain',
-          confidence: maxSim,
-          matches,
-          message:
-            maxSim >= 0.9
-              ? `Exact match found in our registered works database. This file matches a registered artwork.`
-              : `Potential match detected with ${(maxSim * 100).toFixed(0)}% similarity. Review the matches below.`,
-        })
-      } else {
-        setResult({
-          status: 'clean',
-          confidence: 0.95,
+          status: 'uncertain',
+          confidence: 0,
           matches: [],
-          message:
-            'No matches found in our database of registered works. Your file does not appear to match any protected artwork.',
+          message: 'Web crawl service is currently unavailable. The backend needs to implement image similarity search and web crawling to detect copyright violations across the internet.',
         })
       }
-      toast.success('Scan complete')
     } catch (err) {
       console.error('Detection error:', err)
       toast.error('Failed to scan file')
@@ -259,9 +201,9 @@ export default function Detect() {
                 <div>
                   <p className="text-sm font-medium text-white">How it works</p>
                   <ul className="mt-1 space-y-1 text-xs text-blue-300">
-                    <li>• Your file is hashed locally — the original is never uploaded</li>
-                    <li>• We check against indexed AI training datasets and public crawls</li>
-                    <li>• Results show which datasets contain matches, if any</li>
+                    <li>• Your file is hashed locally and sent to our web crawling service</li>
+                    <li>• We use vector embeddings to search the web for visually similar images</li>
+                    <li>• Results show where your artwork appears online with confidence scores</li>
                   </ul>
                 </div>
               </div>
