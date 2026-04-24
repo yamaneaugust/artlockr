@@ -315,7 +315,7 @@ export default function Dashboard() {
                         ${((purchase.amount as number) || 0).toFixed(2)}
                       </span>
                     </div>
-                    {purchase.license_key && (
+                    {Boolean(purchase.license_key) && (
                       <div className="mt-2 pt-2 border-t border-blue-900/30 flex items-center gap-2">
                         <span className="text-xs text-blue-400">License Key:</span>
                         <code className="text-xs text-orange-400 font-mono flex-1">
