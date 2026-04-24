@@ -1,38 +1,28 @@
 import axios, { AxiosInstance } from 'axios'
 
+// Production backend URL (hardcoded fallback)
+const PRODUCTION_BACKEND = 'https://backend-production-2e5d.up.railway.app'
+
 // Determine API base URL based on environment
 function getApiBaseUrl(): string {
-  // If VITE_API_URL is explicitly set in environment variables, use it
+  // If VITE_API_URL is explicitly set, always use it (highest priority)
   const envUrl = import.meta.env.VITE_API_URL
+  if (envUrl && envUrl.trim() !== '' && !envUrl.includes('localhost')) {
+    console.log('✅ Using VITE_API_URL:', envUrl)
+    return envUrl.replace(/\/$/, '') // Remove trailing slash
+  }
 
-  // Check if we're in production (not localhost)
   const isLocalhost = window.location.hostname === 'localhost' ||
                      window.location.hostname === '127.0.0.1'
 
-  // If env URL is set and we're in development, use it
-  if (envUrl && isLocalhost) {
-    return envUrl
+  // In development, use env URL or localhost default
+  if (isLocalhost) {
+    return envUrl || 'http://localhost:8000'
   }
 
-  // In production (Railway or similar), detect backend URL
-  if (!isLocalhost) {
-    const hostname = window.location.hostname
-
-    // Railway pattern: replace '-production' or similar with backend service name
-    if (hostname.includes('railway.app') || hostname.includes('up.railway.app')) {
-      // Try to construct backend URL
-      // Pattern: artlockr-frontend-production.up.railway.app -> artlockr-backend-production.up.railway.app
-      const backendHostname = hostname.replace(/frontend/i, 'backend')
-      return `https://${backendHostname}`
-    }
-
-    // For custom domains, use same origin (backend must be on same domain)
-    console.log('ℹ️ Using same origin for API calls:', window.location.origin)
-    return window.location.origin
-  }
-
-  // Default fallback for local development
-  return 'http://localhost:8000'
+  // In production, use the production backend URL
+  console.log('✅ Using production backend:', PRODUCTION_BACKEND)
+  return PRODUCTION_BACKEND
 }
 
 const BASE = getApiBaseUrl()
