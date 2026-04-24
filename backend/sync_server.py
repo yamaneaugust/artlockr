@@ -17,6 +17,8 @@ try:
     import imagehash
     IMAGING_AVAILABLE = True
 except ImportError:
+    Image = None  # type: ignore[assignment]
+    imagehash = None  # type: ignore[assignment]
     IMAGING_AVAILABLE = False
 
 from fastapi import FastAPI, HTTPException
@@ -280,7 +282,7 @@ class CopyrightDetectRequest(BaseModel):
     file_type: str | None = None
 
 
-def compute_image_hashes(image: Image.Image) -> dict:
+def compute_image_hashes(image) -> dict:
     """Compute multiple perceptual hashes for robust similarity detection."""
     return {
         "phash": str(imagehash.phash(image)),      # Perceptual hash (most robust)
