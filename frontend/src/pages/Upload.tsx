@@ -58,7 +58,7 @@ export default function Upload() {
     })
     const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
     const workId = Date.now()
-    works.push({
+    const workData = {
       id: workId,
       owner_id: user?.id,
       title: meta.title,
@@ -70,8 +70,36 @@ export default function Upload() {
       file_size: file.size,
       preview_url: dataUrl,
       created_at: new Date().toISOString(),
-    })
+    }
+    works.push(workData)
     localStorage.setItem('artlock-works', JSON.stringify(works))
+
+    // Also save a default draft listing so the work appears in the marketplace immediately
+    const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
+    listings.push({
+      id: workId + 1,
+      work_id: workId,
+      title: meta.title,
+      description: meta.description || 'Available for licensing',
+      price: 99,
+      license_type: 'non_exclusive',
+      license_details: '',
+      max_buyers: null,
+      work: {
+        work_type: 'image',
+        tags: workData.tags,
+        preview_url: dataUrl,
+      },
+      artist: {
+        username: user?.username || 'anonymous',
+        display_name: user?.username || 'Anonymous',
+        verified: false,
+      },
+      created_at: new Date().toISOString(),
+      is_draft: true,
+    })
+    localStorage.setItem('artlock-listings', JSON.stringify(listings))
+
     return workId
   }
 
@@ -112,7 +140,8 @@ export default function Upload() {
     const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
     const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
     const work = works.find((w: { id: number }) => w.id === workId)
-    listings.push({
+
+    const updatedListing = {
       id: Date.now(),
       work_id: workId,
       title: listingForm.title,
@@ -132,7 +161,18 @@ export default function Upload() {
         verified: false,
       },
       created_at: new Date().toISOString(),
-    })
+      is_draft: false,
+    }
+
+    // Replace any existing draft listing for this work, otherwise append
+    const draftIndex = listings.findIndex(
+      (l: { work_id: number; is_draft?: boolean }) => l.work_id === workId && l.is_draft
+    )
+    if (draftIndex >= 0) {
+      listings[draftIndex] = updatedListing
+    } else {
+      listings.push(updatedListing)
+    }
     localStorage.setItem('artlock-listings', JSON.stringify(listings))
   }
 
