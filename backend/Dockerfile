@@ -1,4 +1,4 @@
-# ArtLock Sync Backend (cache-bust: v3)
+# ArtLock Sync Backend (cache-bust: v4)
 FROM python:3.11-slim
 
 WORKDIR /app
