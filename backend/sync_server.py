@@ -385,7 +385,7 @@ def _generate_synthetic_matches(img: Image.Image) -> list[dict]:
             source = sources[(hash_val + i) % len(sources)]
             matches.append({
                 "source": f"Found on {source}",
-                "url": f"https://{source}/artwork/{img_hash[:12]}",
+                "url": "",  # No clickable link
                 "similarity": round(max(0.65, similarity), 3),
                 "work_id": None,
                 "registered_date": "",
@@ -400,7 +400,7 @@ def _generate_synthetic_matches(img: Image.Image) -> list[dict]:
             source = sources[(hash_val + i) % len(sources)]
             matches.append({
                 "source": f"Found on {source}",
-                "url": f"https://{source}/artwork/{img_hash[:12]}",
+                "url": "",  # No clickable link
                 "similarity": round(max(0.55, similarity), 3),
                 "work_id": None,
                 "registered_date": "",
@@ -436,7 +436,7 @@ async def _search_web_for_similar_images(image_bytes: bytes, img: Image.Image) -
                         if similarity >= 0.30:
                             matches.append({
                                 "source": f"Found on {source}",
-                                "url": url_found,
+                                "url": "",  # No clickable link
                                 "similarity": round(similarity, 3),
                                 "work_id": None,
                                 "registered_date": "",
