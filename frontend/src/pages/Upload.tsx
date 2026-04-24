@@ -68,10 +68,29 @@ export default function Upload() {
       setStep('listing')
     } catch (err: unknown) {
       console.error('Upload error:', err)
-      const axiosError = err as { response?: { data?: { detail?: string } }; message?: string; code?: string }
+      const axiosError = err as {
+        response?: {
+          data?: { detail?: string }
+          status?: number
+          config?: { url?: string; baseURL?: string }
+        }
+        message?: string
+        code?: string
+        config?: { url?: string; baseURL?: string }
+      }
+
       let msg = 'Upload failed'
 
-      if (axiosError.response?.data?.detail) {
+      if (axiosError.response?.status === 405) {
+        const url = `${axiosError.response.config?.baseURL || ''}${axiosError.response.config?.url || ''}`
+        msg = `Method not allowed (405). The backend endpoint may not be configured correctly. URL: ${url}`
+        console.error('405 Error details:', {
+          url,
+          baseURL: axiosError.response.config?.baseURL,
+          path: axiosError.response.config?.url,
+          fullError: axiosError.response
+        })
+      } else if (axiosError.response?.data?.detail) {
         msg = axiosError.response.data.detail
       } else if (axiosError.code === 'ECONNABORTED') {
         msg = 'Upload timed out. Please try a smaller file or check your connection.'
