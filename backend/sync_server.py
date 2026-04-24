@@ -382,23 +382,22 @@ async def _search_web_for_similar_images(image_bytes: bytes) -> list[dict]:
                     # Extract domain for source name
                     source = url.split("/")[2] if len(url.split("/")) > 2 else "Unknown source"
 
-                    # Assign similarity based on result position (VERY PERMISSIVE)
+                    # Assign similarity (EXTREMELY PERMISSIVE - almost always flag)
                     if idx == 0:
-                        similarity = 0.80  # First result
+                        similarity = 0.75
                     elif idx == 1:
-                        similarity = 0.72  # Second result
+                        similarity = 0.68
                     elif idx == 2:
-                        similarity = 0.65  # Third result
+                        similarity = 0.62
                     elif idx <= 5:
-                        similarity = 0.58 - (idx - 3) * 0.03
+                        similarity = 0.55 - (idx - 3) * 0.04
                     else:
-                        similarity = max(0.40, 0.52 - (idx - 6) * 0.02)
+                        similarity = max(0.30, 0.48 - (idx - 6) * 0.03)
 
-                    # Keep aggregator sites at full confidence (don't penalize)
-                    # ignore_domains filter removed - accept all sources
+                    # Accept ALL sources without penalty
 
-                    # VERY LOW THRESHOLD: Accept matches >= 40%
-                    if similarity >= 0.40:  # Keep almost everything
+                    # EXTREMELY LOW THRESHOLD: Accept matches >= 30%
+                    if similarity >= 0.30:  # Flag everything
                         matches.append({
                             "source": f"Found on {source}",
                             "url": url,
@@ -442,7 +441,7 @@ async def detect_copyright(req: CopyrightDetectRequest):
             continue
 
         similarity = calculate_similarity(uploaded_hashes, stored_hashes)
-        if similarity >= 0.40:  # Very low threshold - flag almost anything similar
+        if similarity >= 0.30:  # Extremely low - flag everything with any similarity
             listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
             name = work.get("title", "Registered Artwork")
             if work.get("owner_username"):
@@ -461,31 +460,31 @@ async def detect_copyright(req: CopyrightDetectRequest):
     # Sort all matches (web + local) by similarity
     matches.sort(key=lambda m: m["similarity"], reverse=True)
 
-    # VERY SENSITIVE VERDICT LOGIC: Flag most images with any web presence
+    # EXTREMELY AGGRESSIVE: Flag almost everything with any web presence
     if matches:
         top = matches[0]["similarity"]
-        high_conf_matches = [m for m in matches if m["similarity"] >= 0.65]
-        medium_conf_matches = [m for m in matches if 0.50 <= m["similarity"] < 0.65]
-        low_conf_matches = [m for m in matches if 0.40 <= m["similarity"] < 0.50]
+        high_conf_matches = [m for m in matches if m["similarity"] >= 0.55]
+        medium_conf_matches = [m for m in matches if 0.40 <= m["similarity"] < 0.55]
+        any_matches = len(matches)
 
-        # MATCH_FOUND: Top >= 65% OR 2+ matches >= 60% OR 3+ matches >= 50%
-        if top >= 0.65 or len(high_conf_matches) >= 2 or len(medium_conf_matches) >= 3:
+        # MATCH_FOUND: Top >= 55% OR ANY 2+ matches OR 1 match >= 50%
+        if top >= 0.55 or any_matches >= 2 or (any_matches >= 1 and top >= 0.50):
             status = "match_found"
             message = f"Copyright match detected ({int(top * 100)}% similarity). This image appears on {len(matches)} external source(s)."
             confidence = top
-        # UNCERTAIN: Top >= 50% OR 2+ matches >= 45% OR just having ANY matches
-        elif top >= 0.50 or len(medium_conf_matches) >= 2 or len(matches) >= 3:
+        # UNCERTAIN: Top >= 35% OR just having ANY match at all
+        elif top >= 0.35 or any_matches >= 1:
             status = "uncertain"
             message = f"Possible copyright issue ({int(top * 100)}% similarity). Similar images found on the web."
-            confidence = top
-        # CLEAN: Only if very few weak matches
+            confidence = max(0.50, top)
+        # CLEAN: Literally zero matches
         else:
             status = "clean"
-            confidence = 0.80
-            message = "No significant matches found on the web. This image appears to be original."
+            confidence = 0.75
+            message = "No matches found on the web. This image appears to be original."
     else:
         status = "clean"
-        confidence = 0.85
+        confidence = 0.80
         message = "No matches found on the web. This image does not appear to match any protected artwork."
 
     return {
