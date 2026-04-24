@@ -383,7 +383,7 @@ def detect_copyright(req: CopyrightDetectRequest):
     else:
         status = "clean"
         confidence = 0.95
-        message = "No matches found in our registered works database. This image does not appear to match any protected artwork."
+        message = "No matches found on the web. This image does not appear to match any protected artwork."
 
     return {
         "status": status,
