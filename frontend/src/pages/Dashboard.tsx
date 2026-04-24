@@ -237,7 +237,7 @@ export default function Dashboard() {
                                   {uploadDate.toLocaleDateString()} at {uploadDate.toLocaleTimeString()}
                                 </span>
                               </div>
-                              {work.file_hash && (
+                              {Boolean(work.file_hash) && (
                                 <div className="text-xs">
                                   <span className="text-blue-500">Hash:</span>{' '}
                                   <code className="text-orange-400 font-mono">
@@ -247,7 +247,7 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          {work.preview_url && (
+                          {Boolean(work.preview_url) && (
                             <img
                               src={work.preview_url as string}
                               alt={work.title as string}
