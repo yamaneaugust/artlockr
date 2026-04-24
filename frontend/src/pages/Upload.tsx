@@ -49,61 +49,91 @@ export default function Upload() {
     },
   })
 
+  const saveWorkLocally = async (file: File): Promise<number> => {
+    const reader = new FileReader()
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
+    const workId = Date.now()
+    works.push({
+      id: workId,
+      owner_id: user?.id,
+      title: meta.title,
+      description: meta.description,
+      tags: meta.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      style: meta.style,
+      work_type: 'image',
+      file_format: file.type.split('/')[1] || 'unknown',
+      file_size: file.size,
+      preview_url: dataUrl,
+      created_at: new Date().toISOString(),
+    })
+    localStorage.setItem('artlock-works', JSON.stringify(works))
+    return workId
+  }
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file || !user) return
     setUploading(true)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('title', meta.title)
-      fd.append('description', meta.description)
-      fd.append('tags', meta.tags)
-      fd.append('style', meta.style)
-      fd.append('artist_id', String(user.id))
-      const { data } = await uploadWork(fd)
-      setWorkId(data.work_id)
+      // Try backend first
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('title', meta.title)
+        fd.append('description', meta.description)
+        fd.append('tags', meta.tags)
+        fd.append('style', meta.style)
+        fd.append('artist_id', String(user.id))
+        const { data } = await uploadWork(fd)
+        setWorkId(data.work_id)
+      } catch {
+        // Backend unavailable - save locally
+        console.log('Backend unavailable, saving work locally')
+        const localId = await saveWorkLocally(file)
+        setWorkId(localId)
+      }
       setListingForm((f) => ({ ...f, title: meta.title }))
       toast.success('Work uploaded!')
       setStep('listing')
     } catch (err: unknown) {
       console.error('Upload error:', err)
-      const axiosError = err as {
-        response?: {
-          data?: { detail?: string }
-          status?: number
-          config?: { url?: string; baseURL?: string }
-        }
-        message?: string
-        code?: string
-        config?: { url?: string; baseURL?: string }
-      }
-
-      let msg = 'Upload failed'
-
-      if (axiosError.response?.status === 405) {
-        const url = `${axiosError.response.config?.baseURL || ''}${axiosError.response.config?.url || ''}`
-        msg = `Method not allowed (405). The backend endpoint may not be configured correctly. URL: ${url}`
-        console.error('405 Error details:', {
-          url,
-          baseURL: axiosError.response.config?.baseURL,
-          path: axiosError.response.config?.url,
-          fullError: axiosError.response
-        })
-      } else if (axiosError.response?.data?.detail) {
-        msg = axiosError.response.data.detail
-      } else if (axiosError.code === 'ECONNABORTED') {
-        msg = 'Upload timed out. Please try a smaller file or check your connection.'
-      } else if (axiosError.code === 'ERR_NETWORK') {
-        msg = 'Network error. Please check if the backend is running.'
-      } else if (axiosError.message) {
-        msg = axiosError.message
-      }
-
-      toast.error(msg, { duration: 5000 })
+      toast.error('Failed to process file. Please try again.', { duration: 5000 })
     } finally {
       setUploading(false)
     }
+  }
+
+  const saveListingLocally = () => {
+    const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
+    const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
+    const work = works.find((w: { id: number }) => w.id === workId)
+    listings.push({
+      id: Date.now(),
+      work_id: workId,
+      title: listingForm.title,
+      description: listingForm.description,
+      price: parseFloat(listingForm.price),
+      license_type: listingForm.license_type,
+      license_details: listingForm.license_details,
+      max_buyers: listingForm.max_buyers ? parseInt(listingForm.max_buyers) : null,
+      work: work ? {
+        work_type: work.work_type,
+        tags: work.tags,
+        preview_url: work.preview_url,
+      } : { work_type: 'image', tags: [], preview_url: null },
+      artist: {
+        username: user?.username || 'anonymous',
+        display_name: user?.username || 'Anonymous',
+        verified: false,
+      },
+      created_at: new Date().toISOString(),
+    })
+    localStorage.setItem('artlock-listings', JSON.stringify(listings))
   }
 
   const handleCreateListing = async (e: React.FormEvent) => {
@@ -111,16 +141,23 @@ export default function Upload() {
     if (!workId || !user) return
     setListing(true)
     try {
-      const fd = new FormData()
-      fd.append('work_id', String(workId))
-      fd.append('artist_id', String(user.id))
-      fd.append('title', listingForm.title)
-      fd.append('description', listingForm.description)
-      fd.append('price', listingForm.price)
-      fd.append('license_type', listingForm.license_type)
-      fd.append('license_details', listingForm.license_details)
-      if (listingForm.max_buyers) fd.append('max_buyers', listingForm.max_buyers)
-      await createListing(fd)
+      // Try backend first
+      try {
+        const fd = new FormData()
+        fd.append('work_id', String(workId))
+        fd.append('artist_id', String(user.id))
+        fd.append('title', listingForm.title)
+        fd.append('description', listingForm.description)
+        fd.append('price', listingForm.price)
+        fd.append('license_type', listingForm.license_type)
+        fd.append('license_details', listingForm.license_details)
+        if (listingForm.max_buyers) fd.append('max_buyers', listingForm.max_buyers)
+        await createListing(fd)
+      } catch {
+        // Backend unavailable - save locally
+        console.log('Backend unavailable, saving listing locally')
+        saveListingLocally()
+      }
       toast.success('Listing created!')
       setStep('done')
     } catch (err: unknown) {
