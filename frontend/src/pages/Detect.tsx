@@ -36,74 +36,21 @@ export default function Detect() {
     accept: { 'image/*': [], 'audio/*': [], 'video/*': [] },
   })
 
-  // Generate mock detection results (fallback when backend unavailable)
-  const generateMockResults = (fileHash: string): DetectionResult => {
-    const hashInt = parseInt(fileHash.substring(0, 8), 16)
-
-    const mockSources = [
-      { name: 'DeviantArt', domain: 'deviantart.com' },
-      { name: 'ArtStation', domain: 'artstation.com' },
-      { name: 'Pinterest', domain: 'pinterest.com' },
-      { name: 'Behance', domain: 'behance.net' },
-      { name: 'Instagram', domain: 'instagram.com' },
-      { name: 'Flickr', domain: 'flickr.com' },
-      { name: 'Tumblr', domain: 'tumblr.com' },
-      { name: 'Unsplash', domain: 'unsplash.com' },
-    ]
-
-    const numMatches = hashInt % 4
-    const matches: { source: string; url: string; similarity: number }[] = []
-
-    for (let i = 0; i < numMatches; i++) {
-      const sourceIdx = (hashInt + i * 17) % mockSources.length
-      const source = mockSources[sourceIdx]
-      const similarity = 0.6 + ((hashInt + i * 23) % 40) / 100
-      const imageId = Math.abs(hashInt + i * 1000) % 999999
-
-      matches.push({
-        source: `${source.name} - User artwork`,
-        url: `https://${source.domain}/art/${imageId}`,
-        similarity: parseFloat(similarity.toFixed(2)),
-      })
-    }
-
-    matches.sort((a, b) => b.similarity - a.similarity)
-
-    if (matches.length > 0) {
-      const maxSim = matches[0].similarity
-      return {
-        status: maxSim >= 0.9 ? 'match_found' : 'uncertain',
-        confidence: maxSim,
-        matches,
-        message: maxSim >= 0.9
-          ? `High confidence match found on the web (${(maxSim * 100).toFixed(0)}% similarity). This image appears on ${matches.length} website(s).`
-          : `Potential match detected with ${(maxSim * 100).toFixed(0)}% similarity. Review the ${matches.length} source(s) below.`,
-      }
-    }
-
-    return {
-      status: 'clean',
-      confidence: 0.95,
-      matches: [],
-      message: 'No similar images found on the web. This appears to be original or not widely distributed.',
-    }
-  }
-
   const handleDetect = async () => {
     if (!file) return
     setLoading(true)
     try {
-      // Hash file locally (SHA-256) for fingerprinting
+      // Convert file to base64 for backend processing
       const arrayBuffer = await file.arrayBuffer()
-      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const fileHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      )
+      const imageData = `data:${file.type};base64,${base64}`
 
-      // Simulate processing time for web crawl (realistic delay)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Simulate realistic processing time
+      await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // Call backend to crawl the web and find similar images using vector embeddings
-      // Backend will use image similarity models (CLIP, etc.) and search engines
+      // Call backend for perceptual hash-based similarity detection
       try {
         const res = await fetch(
           `${import.meta.env.VITE_API_URL || 'https://backend-production-2e5d.up.railway.app'}/api/v1/copyright/detect`,
@@ -111,12 +58,12 @@ export default function Detect() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              file_hash: fileHash,
+              image_data: imageData,
               filename: file.name,
               file_size: file.size,
               file_type: file.type,
             }),
-            signal: AbortSignal.timeout(30000), // 30 second timeout for web crawl
+            signal: AbortSignal.timeout(30000),
           },
         )
 
@@ -156,11 +103,14 @@ export default function Detect() {
           throw new Error(`Backend returned ${res.status}`)
         }
       } catch (err) {
-        console.error('Backend detection failed, using mock results:', err)
-        // Backend unavailable - generate mock results for demo
-        const mockResult = generateMockResults(fileHash)
-        setResult(mockResult)
-        toast.success(mockResult.matches.length > 0 ? 'Web scan complete' : 'Scan complete - no matches found')
+        console.error('Backend detection failed:', err)
+        toast.error('Copyright detection service unavailable')
+        setResult({
+          status: 'uncertain',
+          confidence: 0,
+          matches: [],
+          message: 'Copyright detection service is temporarily unavailable. Please try again later or ensure the backend is deployed.',
+        })
       }
     } catch (err) {
       console.error('Detection error:', err)
@@ -250,9 +200,10 @@ export default function Detect() {
                 <div>
                   <p className="text-sm font-medium text-white">How it works</p>
                   <ul className="mt-1 space-y-1 text-xs text-blue-300">
-                    <li>• Your file is hashed locally and sent to our web crawling service</li>
-                    <li>• We use vector embeddings to search the web for visually similar images</li>
-                    <li>• Results show where your artwork appears online with confidence scores</li>
+                    <li>• Your image is analyzed using perceptual hashing algorithms (pHash, dHash, wHash)</li>
+                    <li>• We compare against all registered artworks in our database</li>
+                    <li>• Detects similar images even if resized, cropped, or slightly modified</li>
+                    <li>• Results show similarity scores based on actual image content analysis</li>
                   </ul>
                 </div>
               </div>

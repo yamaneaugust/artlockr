@@ -7,8 +7,17 @@ with zero configuration. No database required.
 import json
 import os
 import time
+import base64
+import io
 from pathlib import Path
 from typing import Any
+
+try:
+    from PIL import Image
+    import imagehash
+    IMAGING_AVAILABLE = True
+except ImportError:
+    IMAGING_AVAILABLE = False
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -232,61 +241,130 @@ def stats():
     }
 
 
-# ── Copyright Detection (Mock/Demo) ────────────────────────────────────
+# ── Copyright Detection (Perceptual Hash Based) ────────────────────────
 
 class CopyrightDetectRequest(BaseModel):
-    file_hash: str
+    image_data: str  # Base64 encoded image
     filename: str
     file_size: int | None = None
     file_type: str | None = None
 
 
+def compute_image_hashes(image: Image.Image) -> dict:
+    """Compute multiple perceptual hashes for robust similarity detection."""
+    return {
+        "phash": str(imagehash.phash(image)),      # Perceptual hash (most robust)
+        "dhash": str(imagehash.dhash(image)),      # Difference hash (fast)
+        "ahash": str(imagehash.average_hash(image)), # Average hash
+        "whash": str(imagehash.whash(image)),      # Wavelet hash (best for scaling)
+    }
+
+
+def hamming_distance(hash1: str, hash2: str) -> int:
+    """Calculate Hamming distance between two hashes."""
+    if len(hash1) != len(hash2):
+        return 999
+    return sum(c1 != c2 for c1, c2 in zip(hash1, hash2))
+
+
+def calculate_similarity(hashes1: dict, hashes2: dict) -> float:
+    """
+    Calculate similarity score (0-1) between two sets of image hashes.
+    Uses weighted average of multiple hash types for accuracy.
+    """
+    if not hashes1 or not hashes2:
+        return 0.0
+
+    # Max Hamming distance for each hash type (64-bit hashes = 64 max distance)
+    max_distance = 64
+
+    # Calculate normalized similarity for each hash type
+    similarities = {}
+    weights = {"phash": 0.4, "dhash": 0.2, "ahash": 0.2, "whash": 0.2}
+
+    for hash_type in ["phash", "dhash", "ahash", "whash"]:
+        if hash_type in hashes1 and hash_type in hashes2:
+            distance = hamming_distance(hashes1[hash_type], hashes2[hash_type])
+            similarities[hash_type] = max(0, 1 - (distance / max_distance))
+
+    # Weighted average
+    total_weight = sum(weights[k] for k in similarities.keys())
+    if total_weight == 0:
+        return 0.0
+
+    weighted_sum = sum(similarities[k] * weights[k] for k in similarities.keys())
+    return weighted_sum / total_weight
+
+
 @app.post("/api/v1/copyright/detect")
 def detect_copyright(req: CopyrightDetectRequest):
     """
-    Mock copyright detection - simulates web crawling with realistic results.
-    Uses file hash to deterministically generate demo matches.
+    Real perceptual hash-based copyright detection.
+    Compares uploaded image against all registered works using multiple hash algorithms.
+    Returns actual similarity scores based on image content analysis.
     """
-    # Use hash to seed deterministic results (same file = same results)
-    hash_int = int(req.file_hash[:8], 16) if req.file_hash else 0
+    if not IMAGING_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Image processing libraries not available")
 
-    # Simulate processing delay (realistic for web crawl)
-    time.sleep(0.5)
+    try:
+        # Decode base64 image
+        image_bytes = base64.b64decode(req.image_data.split(',')[1] if ',' in req.image_data else req.image_data)
+        image = Image.open(io.BytesIO(image_bytes))
 
-    # Demo match sources (realistic-looking websites)
-    mock_sources = [
-        {"name": "DeviantArt", "domain": "deviantart.com"},
-        {"name": "ArtStation", "domain": "artstation.com"},
-        {"name": "Pinterest", "domain": "pinterest.com"},
-        {"name": "Behance", "domain": "behance.net"},
-        {"name": "Instagram", "domain": "instagram.com"},
-        {"name": "Flickr", "domain": "flickr.com"},
-        {"name": "Tumblr", "domain": "tumblr.com"},
-        {"name": "Reddit", "domain": "reddit.com"},
-        {"name": "Wikimedia Commons", "domain": "commons.wikimedia.org"},
-        {"name": "Unsplash", "domain": "unsplash.com"},
-    ]
+        # Convert to RGB if necessary
+        if image.mode not in ('RGB', 'L'):
+            image = image.convert('RGB')
 
-    # Generate 0-3 matches based on hash
-    num_matches = (hash_int % 4)  # 0, 1, 2, or 3 matches
+        # Compute perceptual hashes for uploaded image
+        uploaded_hashes = compute_image_hashes(image)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to process image: {str(e)}")
+
+    # Compare against all registered works
     matches = []
 
-    for i in range(num_matches):
-        source_idx = (hash_int + i * 17) % len(mock_sources)
-        source = mock_sources[source_idx]
+    for work in store["works"]:
+        # Skip works without preview_url (no image to compare)
+        if not work.get("preview_url"):
+            continue
 
-        # Generate similarity score (60-99%)
-        similarity = 0.6 + ((hash_int + i * 23) % 40) / 100.0
+        try:
+            # Decode stored work image
+            stored_image_data = work["preview_url"]
+            stored_bytes = base64.b64decode(stored_image_data.split(',')[1] if ',' in stored_image_data else stored_image_data)
+            stored_image = Image.open(io.BytesIO(stored_bytes))
 
-        # Create realistic-looking URL
-        image_id = abs(hash_int + i * 1000) % 999999
-        url = f"https://{source['domain']}/art/{image_id}"
+            if stored_image.mode not in ('RGB', 'L'):
+                stored_image = stored_image.convert('RGB')
 
-        matches.append({
-            "source": f"{source['name']} - User artwork",
-            "url": url,
-            "similarity": round(similarity, 2),
-        })
+            # Compute hashes for stored image
+            stored_hashes = compute_image_hashes(stored_image)
+
+            # Calculate similarity
+            similarity = calculate_similarity(uploaded_hashes, stored_hashes)
+
+            # Only include if similarity is above threshold (60%)
+            if similarity >= 0.60:
+                # Find associated listing
+                listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
+
+                source_name = work.get("title", "Registered Artwork")
+                if work.get("owner_username"):
+                    source_name = f"{source_name} by {work['owner_username']}"
+
+                matches.append({
+                    "source": source_name,
+                    "url": f"/marketplace/{listing['id']}" if listing else "#",
+                    "similarity": round(similarity, 3),
+                    "work_id": work["id"],
+                    "registered_date": work.get("created_at", ""),
+                })
+
+        except Exception as e:
+            # Skip works that fail to process
+            print(f"Failed to process work {work.get('id')}: {e}")
+            continue
 
     # Sort by similarity (highest first)
     matches.sort(key=lambda m: m["similarity"], reverse=True)
@@ -294,22 +372,29 @@ def detect_copyright(req: CopyrightDetectRequest):
     # Determine status and confidence
     if matches:
         max_similarity = matches[0]["similarity"]
-        if max_similarity >= 0.9:
+        if max_similarity >= 0.95:
             status = "match_found"
-            message = f"High confidence match found on the web ({int(max_similarity * 100)}% similarity). This image appears on {len(matches)} website(s)."
+            message = f"Exact or near-exact match found ({int(max_similarity * 100)}% similarity). This image is registered in our database."
+        elif max_similarity >= 0.85:
+            status = "match_found"
+            message = f"High confidence match found ({int(max_similarity * 100)}% similarity). This image closely matches registered artwork."
+        elif max_similarity >= 0.70:
+            status = "uncertain"
+            message = f"Potential match detected ({int(max_similarity * 100)}% similarity). The images are similar but may have modifications."
         else:
             status = "uncertain"
-            message = f"Potential match detected with {int(max_similarity * 100)}% similarity. Review the {len(matches)} source(s) below."
+            message = f"Low confidence match ({int(max_similarity * 100)}% similarity). Minor similarities detected."
         confidence = max_similarity
     else:
         status = "clean"
         confidence = 0.95
-        message = "No similar images found on the web. This appears to be original or not widely distributed."
+        message = "No matches found in our registered works database. This image does not appear to match any protected artwork."
 
     return {
         "status": status,
         "confidence": confidence,
-        "matches": matches,
+        "matches": matches[:10],  # Return top 10 matches
         "message": message,
-        "scanned_sources": ["Google Images", "TinEye", "Bing Visual Search", "Yandex Images"] if matches else [],
+        "scanned_works": len(store["works"]),
+        "hash_algorithms": ["pHash", "dHash", "aHash", "wHash"],
     }

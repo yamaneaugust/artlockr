@@ -23,6 +23,7 @@ scikit-learn==1.4.0
 scikit-image==0.22.0  # For SSIM computation
 scipy==1.11.4  # For noise pattern analysis in AI defense
 opencv-python==4.9.0.80
+imagehash==4.3.1  # Perceptual hashing for image similarity
 
 # Vector Search
 faiss-cpu==1.7.4  # Use faiss-gpu if CUDA available
