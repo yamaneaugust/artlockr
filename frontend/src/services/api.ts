@@ -46,11 +46,13 @@ export const getStats = () =>
 export const uploadWork = (formData: FormData) =>
   http.post('/marketplace/works/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000, // 60 second timeout
   })
 
 export const createListing = (formData: FormData) =>
   http.post('/marketplace/listings/create', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 30000, // 30 second timeout
   })
 
 export const purchaseListing = (listingId: number, buyerId: number) =>

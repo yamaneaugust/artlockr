@@ -160,49 +160,71 @@ async def upload_work(
     # In real app: current_user = Depends(get_current_user)
     artist_id: int = Form(...),     # TODO: replace with JWT auth
 ):
-    # Validate file type
-    content_type = file.content_type or ""
-    work_type, fmt = _detect_work_type(content_type, file.filename or "")
-    if not work_type:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {content_type}")
+    try:
+        # Validate file type
+        content_type = file.content_type or ""
+        work_type, fmt = _detect_work_type(content_type, file.filename or "")
+        if not work_type:
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {content_type}")
 
-    # Read and hash
-    data = await file.read()
-    file_hash = hashlib.sha256(data).hexdigest()
+        # Read and hash
+        try:
+            data = await file.read()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
 
-    if db.query(CreativeWork).filter(CreativeWork.file_hash == file_hash).first():
-        raise HTTPException(status_code=409, detail="This file has already been uploaded")
+        file_hash = hashlib.sha256(data).hexdigest()
 
-    # Save file temporarily for feature extraction; can delete after
-    filename = f"{file_hash}.{fmt}"
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    with open(file_path, "wb") as f:
-        f.write(data)
+        if db.query(CreativeWork).filter(CreativeWork.file_hash == file_hash).first():
+            raise HTTPException(status_code=409, detail="This file has already been uploaded")
 
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        # Save file temporarily for feature extraction; can delete after
+        filename = f"{file_hash}.{fmt}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
 
-    work = CreativeWork(
-        owner_id=artist_id,
-        title=title,
-        description=description,
-        work_type=work_type,
-        file_format=fmt,
-        file_size=len(data),
-        file_hash=file_hash,
-        tags=tag_list,
-        style=style,
-        source="upload",
-        image_deleted=False,
-        upload_proof_hash=hashlib.sha256(
-            f"{file_hash}{artist_id}{datetime.utcnow().isoformat()}".encode()
-        ).hexdigest(),
-        created_at=datetime.utcnow(),
-    )
-    db.add(work)
-    db.commit()
-    db.refresh(work)
+        try:
+            # Ensure upload directory exists
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(data)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
-    return {"work_id": work.id, "file_hash": file_hash, "work_type": work_type}
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+
+        try:
+            work = CreativeWork(
+                owner_id=artist_id,
+                title=title,
+                description=description,
+                work_type=work_type,
+                file_format=fmt,
+                file_size=len(data),
+                file_hash=file_hash,
+                tags=tag_list,
+                style=style,
+                source="upload",
+                image_deleted=False,
+                upload_proof_hash=hashlib.sha256(
+                    f"{file_hash}{artist_id}{datetime.utcnow().isoformat()}".encode()
+                ).hexdigest(),
+                created_at=datetime.utcnow(),
+            )
+            db.add(work)
+            db.commit()
+            db.refresh(work)
+        except Exception as e:
+            db.rollback()
+            # Clean up file if database save failed
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+        return {"work_id": work.id, "file_hash": file_hash, "work_type": work_type}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
 @router.post("/listings/create")
