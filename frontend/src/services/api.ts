@@ -1,11 +1,47 @@
 import axios, { AxiosInstance } from 'axios'
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Determine API base URL based on environment
+function getApiBaseUrl(): string {
+  // If VITE_API_URL is explicitly set in environment variables, use it
+  const envUrl = import.meta.env.VITE_API_URL
+
+  // Check if we're in production (not localhost)
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                     window.location.hostname === '127.0.0.1'
+
+  // If env URL is set and we're in development, use it
+  if (envUrl && isLocalhost) {
+    return envUrl
+  }
+
+  // In production (Railway or similar), detect backend URL
+  if (!isLocalhost) {
+    const hostname = window.location.hostname
+
+    // Railway pattern: replace '-production' or similar with backend service name
+    if (hostname.includes('railway.app') || hostname.includes('up.railway.app')) {
+      // Try to construct backend URL
+      // Pattern: artlockr-frontend-production.up.railway.app -> artlockr-backend-production.up.railway.app
+      const backendHostname = hostname.replace(/frontend/i, 'backend')
+      return `https://${backendHostname}`
+    }
+
+    // Fallback: assume backend is on same origin
+    return window.location.origin
+  }
+
+  // Default fallback for local development
+  return 'http://localhost:8000'
+}
+
+const BASE = getApiBaseUrl()
 
 const http: AxiosInstance = axios.create({ baseURL: BASE })
 
 // Log API base URL for debugging
-console.log('API Base URL:', BASE)
+console.log('🔗 API Base URL:', BASE)
+console.log('📍 Current hostname:', window.location.hostname)
+console.log('🌍 Environment mode:', import.meta.env.MODE)
 
 // ── Auth / Profiles ───────────────────────────────────────────────────────────
 

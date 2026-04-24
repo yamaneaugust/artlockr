@@ -45,11 +45,7 @@ export default function Upload() {
     onDrop,
     multiple: false,
     accept: {
-      'image/*': [],
-      'audio/*': [],
-      'video/*': [],
-      'text/plain': [],
-      'application/zip': [],
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
     },
   })
 
@@ -167,10 +163,10 @@ export default function Upload() {
               ) : (
                 <>
                   <p className="text-sm font-medium text-white">
-                    Drop your file here or click to browse
+                    Drop your image here or click to browse
                   </p>
                   <p className="text-xs text-blue-400 mt-1">
-                    Images, audio, video, text, or ZIP datasets
+                    PNG, JPG, GIF, WebP, or SVG images only
                   </p>
                 </>
               )}
