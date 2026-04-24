@@ -1,41 +1,9 @@
-# Backend and API
+# Minimal requirements for sync_server.py
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-python-multipart==0.0.6
 pydantic==2.5.3
-pydantic-settings==2.1.0
 
-# Payments
-stripe>=7.0.0
-
-# Database
-sqlalchemy==2.0.25
-asyncpg==0.29.0
-alembic==1.13.1
-psycopg2-binary==2.9.9  # For database initialization and backups
-
-# ML and Image Processing
-torch==2.2.0
-torchvision==0.17.0
+# Image processing for copyright detection
 pillow==10.2.0
+imagehash==4.3.1
 numpy==1.26.3
-scikit-learn==1.4.0
-scikit-image==0.22.0  # For SSIM computation
-scipy==1.11.4  # For noise pattern analysis in AI defense
-opencv-python==4.9.0.80
-imagehash==4.3.1  # Perceptual hashing for image similarity
-
-# Vector Search
-faiss-cpu==1.7.4  # Use faiss-gpu if CUDA available
-
-# Utilities
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-dotenv==1.0.0
-aiofiles==23.2.1
-httpx==0.26.0
-tqdm==4.66.1
-schedule==1.2.0  # For scheduled scanning jobs
-
-# Monitoring and Logging
-loguru==0.7.2
