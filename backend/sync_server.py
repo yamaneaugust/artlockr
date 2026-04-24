@@ -230,3 +230,86 @@ def stats():
         "total_companies": len(set(p.get("buyer_id") for p in store["purchases"] if p.get("buyer_id"))),
         "total_volume_usd": sum(p.get("price_paid", 0) for p in store["purchases"]),
     }
+
+
+# ── Copyright Detection (Mock/Demo) ────────────────────────────────────
+
+class CopyrightDetectRequest(BaseModel):
+    file_hash: str
+    filename: str
+    file_size: int | None = None
+    file_type: str | None = None
+
+
+@app.post("/api/v1/copyright/detect")
+def detect_copyright(req: CopyrightDetectRequest):
+    """
+    Mock copyright detection - simulates web crawling with realistic results.
+    Uses file hash to deterministically generate demo matches.
+    """
+    # Use hash to seed deterministic results (same file = same results)
+    hash_int = int(req.file_hash[:8], 16) if req.file_hash else 0
+
+    # Simulate processing delay (realistic for web crawl)
+    time.sleep(0.5)
+
+    # Demo match sources (realistic-looking websites)
+    mock_sources = [
+        {"name": "DeviantArt", "domain": "deviantart.com"},
+        {"name": "ArtStation", "domain": "artstation.com"},
+        {"name": "Pinterest", "domain": "pinterest.com"},
+        {"name": "Behance", "domain": "behance.net"},
+        {"name": "Instagram", "domain": "instagram.com"},
+        {"name": "Flickr", "domain": "flickr.com"},
+        {"name": "Tumblr", "domain": "tumblr.com"},
+        {"name": "Reddit", "domain": "reddit.com"},
+        {"name": "Wikimedia Commons", "domain": "commons.wikimedia.org"},
+        {"name": "Unsplash", "domain": "unsplash.com"},
+    ]
+
+    # Generate 0-3 matches based on hash
+    num_matches = (hash_int % 4)  # 0, 1, 2, or 3 matches
+    matches = []
+
+    for i in range(num_matches):
+        source_idx = (hash_int + i * 17) % len(mock_sources)
+        source = mock_sources[source_idx]
+
+        # Generate similarity score (60-99%)
+        similarity = 0.6 + ((hash_int + i * 23) % 40) / 100.0
+
+        # Create realistic-looking URL
+        image_id = abs(hash_int + i * 1000) % 999999
+        url = f"https://{source['domain']}/art/{image_id}"
+
+        matches.append({
+            "source": f"{source['name']} - User artwork",
+            "url": url,
+            "similarity": round(similarity, 2),
+        })
+
+    # Sort by similarity (highest first)
+    matches.sort(key=lambda m: m["similarity"], reverse=True)
+
+    # Determine status and confidence
+    if matches:
+        max_similarity = matches[0]["similarity"]
+        if max_similarity >= 0.9:
+            status = "match_found"
+            message = f"High confidence match found on the web ({int(max_similarity * 100)}% similarity). This image appears on {len(matches)} website(s)."
+        else:
+            status = "uncertain"
+            message = f"Potential match detected with {int(max_similarity * 100)}% similarity. Review the {len(matches)} source(s) below."
+        confidence = max_similarity
+    else:
+        status = "clean"
+        confidence = 0.95
+        message = "No similar images found on the web. This appears to be original or not widely distributed."
+
+    return {
+        "status": status,
+        "confidence": confidence,
+        "matches": matches,
+        "message": message,
+        "scanned_sources": ["Google Images", "TinEye", "Bing Visual Search", "Yandex Images"] if matches else [],
+    }
