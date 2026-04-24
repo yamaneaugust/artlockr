@@ -80,7 +80,7 @@ export default function Marketplace() {
     const localListings = loadLocalListings()
 
     // Pull in listings from shared backend (other users' uploads)
-    const synced = (await syncFetchListings()) as Listing[]
+    const synced = (await syncFetchListings()) as unknown as Listing[]
 
     // Merge local + synced, deduped by id (local wins)
     const localIds = new Set(localListings.map((l) => l.id))
