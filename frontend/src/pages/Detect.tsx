@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Search, Upload, AlertTriangle, CheckCircle, Loader2, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { syncFetchWorks, syncFetchListings } from '../services/sync'
 
 type ResultStatus = 'clean' | 'match_found' | 'uncertain'
 
@@ -54,27 +55,37 @@ export default function Detect() {
       // Simulate processing time
       await new Promise((resolve) => setTimeout(resolve, 800))
 
-      // Check against locally uploaded works
-      const uploadedWorks = JSON.parse(localStorage.getItem('artlock-works') || '[]') as Array<{
+      // Check against locally uploaded works + synced works from other users
+      const localWorks = JSON.parse(localStorage.getItem('artlock-works') || '[]') as Array<{
         id: number
         title: string
         owner_id?: number
+        owner_username?: string
         file_hash?: string
         fingerprint?: string
         file_size?: number
         preview_url?: string
       }>
-      const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]') as Array<{
+
+      // Pull works from shared backend (other users' uploads)
+      const syncedWorks = (await syncFetchWorks()) as unknown as typeof localWorks
+      const allWorks = [...localWorks, ...syncedWorks]
+
+      const localListings = JSON.parse(localStorage.getItem('artlock-listings') || '[]') as Array<{
         id: number
         work_id: number
         title: string
-        artist?: { display_name?: string }
+        artist?: { display_name?: string; username?: string }
       }>
+
+      // Pull listings from shared backend
+      const syncedListings = (await syncFetchListings()) as unknown as typeof localListings
+      const allListings = [...localListings, ...syncedListings]
 
       const matches: { source: string; url: string; similarity: number }[] = []
 
-      // Check for exact hash matches
-      for (const work of uploadedWorks) {
+      // Check for exact hash matches across all works (local + synced from other users)
+      for (const work of allWorks) {
         let similarity = 0
         if (work.file_hash === fileHash) {
           similarity = 1.0
@@ -86,9 +97,20 @@ export default function Detect() {
         }
 
         if (similarity >= 0.6) {
-          const listing = listings.find((l) => l.work_id === work.id)
+          const listing = allListings.find((l) => l.work_id === work.id)
+
+          // Build a meaningful source name
+          let sourceName = 'Registered Artwork'
+          if (listing?.title) {
+            sourceName = listing.title
+          } else if (work.title && work.title.length > 3) {
+            sourceName = work.title
+          } else if (work.owner_username) {
+            sourceName = `Artwork by ${work.owner_username}`
+          }
+
           matches.push({
-            source: listing?.title || work.title || 'Registered Work',
+            source: sourceName,
             url: listing ? `/marketplace/${listing.id}` : '#',
             similarity,
           })
@@ -285,16 +307,30 @@ export default function Detect() {
                 <h3 className="text-white font-bold mb-3">Matches Found</h3>
                 <div className="space-y-3">
                   {result.matches.map((m, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-blue-950 rounded-lg">
-                      <div>
-                        <p className="text-white text-sm font-medium">{m.source}</p>
-                        <a href={m.url} target="_blank" rel="noreferrer" className="text-xs text-orange-400 hover:underline">
-                          {m.url}
-                        </a>
+                    <div key={i} className="bg-blue-950 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{m.source}</p>
+                          {m.url && m.url !== '#' ? (
+                            <a
+                              href={m.url}
+                              className="text-xs text-orange-400 hover:text-orange-300 hover:underline inline-flex items-center gap-1 mt-1"
+                            >
+                              View listing →
+                            </a>
+                          ) : (
+                            <p className="text-xs text-blue-500 mt-1">Registered work (not listed for sale)</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-lg font-bold text-red-400">
+                            {(m.similarity * 100).toFixed(0)}% match
+                          </span>
+                          <span className="text-xs text-blue-400">
+                            {m.similarity >= 0.9 ? 'Exact match' : m.similarity >= 0.8 ? 'Very similar' : 'Similar'}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-sm font-bold text-red-400">
-                        {(m.similarity * 100).toFixed(0)}% match
-                      </span>
                     </div>
                   ))}
                 </div>
