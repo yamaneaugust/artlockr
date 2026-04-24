@@ -9,12 +9,105 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const loadLocalData = () => {
+    try {
+      const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
+      const purchases = JSON.parse(localStorage.getItem('artlock-purchases') || '[]')
+      return { listings, purchases }
+    } catch {
+      return { listings: [], purchases: [] }
+    }
+  }
+
   useEffect(() => {
     if (!user) return
+    const { listings, purchases } = loadLocalData()
+
+    // Filter local data by current user
+    const userListings = listings.filter(
+      (l: { artist?: { username?: string } }) =>
+        l.artist?.username === user.username,
+    )
+    const userPurchases = purchases.filter(
+      (p: { buyer_id?: number }) => p.buyer_id === user.id,
+    )
+
     const fetch = user.role === 'artist' ? getArtistProfile : getCompanyProfile
     fetch(user.id)
-      .then(({ data }) => setProfile(data))
-      .catch(() => null)
+      .then(({ data }) => {
+        // Merge local data with backend profile
+        if (user.role === 'artist') {
+          setProfile({
+            ...data,
+            listing_count: (data.listing_count || 0) + userListings.length,
+            total_sales: (data.total_sales || 0) + userListings.reduce(
+              (sum: number, l: { sales_count?: number }) => sum + (l.sales_count || 0),
+              0,
+            ),
+            total_earnings: (data.total_earnings || 0) + userListings.reduce(
+              (sum: number, l: { sales_count?: number; price?: number }) =>
+                sum + ((l.sales_count || 0) * (l.price || 0)),
+              0,
+            ),
+            listings: [...userListings, ...(data.listings || [])],
+          })
+        } else {
+          setProfile({
+            ...data,
+            total_purchases: (data.total_purchases || 0) + userPurchases.length,
+            total_spent: (data.total_spent || 0) + userPurchases.reduce(
+              (sum: number, p: { price_paid?: number }) => sum + (p.price_paid || 0),
+              0,
+            ),
+            recent_purchases: [
+              ...userPurchases.map((p: Record<string, unknown>) => ({
+                id: p.id,
+                listing_title: p.listing_title,
+                purchased_at: p.purchased_at,
+                license_type: p.license_type,
+                amount: p.price_paid,
+                license_key: p.license_key,
+              })),
+              ...(data.recent_purchases || []),
+            ],
+          })
+        }
+      })
+      .catch(() => {
+        // Backend unavailable - use only local data
+        if (user.role === 'artist') {
+          setProfile({
+            listing_count: userListings.length,
+            total_sales: userListings.reduce(
+              (sum: number, l: { sales_count?: number }) => sum + (l.sales_count || 0),
+              0,
+            ),
+            total_earnings: userListings.reduce(
+              (sum: number, l: { sales_count?: number; price?: number }) =>
+                sum + ((l.sales_count || 0) * (l.price || 0)),
+              0,
+            ),
+            listings: userListings,
+          })
+        } else {
+          setProfile({
+            company_name: user.company_name,
+            total_purchases: userPurchases.length,
+            total_spent: userPurchases.reduce(
+              (sum: number, p: { price_paid?: number }) => sum + (p.price_paid || 0),
+              0,
+            ),
+            recent_purchases: userPurchases.map((p: Record<string, unknown>) => ({
+              id: p.id,
+              listing_title: p.listing_title,
+              purchased_at: p.purchased_at,
+              license_type: p.license_type,
+              amount: p.price_paid,
+              license_key: p.license_key,
+            })),
+          })
+        }
+      })
       .finally(() => setLoading(false))
   }, [user])
 
@@ -208,18 +301,36 @@ export default function Dashboard() {
                 {(profile.recent_purchases as Record<string, unknown>[]).slice(0, 5).map((purchase) => (
                   <div
                     key={purchase.id as number}
-                    className="flex items-center justify-between p-4 bg-blue-950 rounded-lg"
+                    className="p-4 bg-blue-950 rounded-lg"
                   >
-                    <div>
-                      <p className="text-white font-medium">{purchase.listing_title as string}</p>
-                      <p className="text-blue-400 text-sm">
-                        {new Date(purchase.purchased_at as string).toLocaleDateString()} ·{' '}
-                        {(purchase.license_type as string).replace('_', ' ')}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium">{purchase.listing_title as string}</p>
+                        <p className="text-blue-400 text-sm">
+                          {new Date(purchase.purchased_at as string).toLocaleDateString()} ·{' '}
+                          {((purchase.license_type as string) || 'non_exclusive').replace('_', ' ')}
+                        </p>
+                      </div>
+                      <span className="text-orange-500 font-bold">
+                        ${((purchase.amount as number) || 0).toFixed(2)}
+                      </span>
                     </div>
-                    <span className="text-orange-500 font-bold">
-                      ${(purchase.amount as number).toFixed(2)}
-                    </span>
+                    {purchase.license_key && (
+                      <div className="mt-2 pt-2 border-t border-blue-900/30 flex items-center gap-2">
+                        <span className="text-xs text-blue-400">License Key:</span>
+                        <code className="text-xs text-orange-400 font-mono flex-1">
+                          {purchase.license_key as string}
+                        </code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(purchase.license_key as string)
+                          }}
+                          className="text-xs text-blue-300 hover:text-white"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
