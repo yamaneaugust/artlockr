@@ -351,7 +351,7 @@ class CopyrightDetectRequest(BaseModel):
 async def _search_web_for_similar_images(image_bytes: bytes) -> list[dict]:
     """
     Perform reverse image search on the web using Yandex.
-    Returns list of similar images found with URLs and similarity scores.
+    Returns ONLY high-confidence matches (stricter filtering).
     """
     try:
         # Yandex reverse image search endpoint
@@ -373,7 +373,7 @@ async def _search_web_for_similar_images(image_bytes: bytes) -> list[dict]:
 
             matches = []
             # Find similar image results (Yandex uses specific CSS classes)
-            for item in soup.select(".other-sites__snippet, .cbir-similar__thumb")[:10]:
+            for idx, item in enumerate(soup.select(".other-sites__snippet, .cbir-similar__thumb")[:15]):
                 link_elem = item.select_one("a")
                 img_elem = item.select_one("img")
 
@@ -382,18 +382,36 @@ async def _search_web_for_similar_images(image_bytes: bytes) -> list[dict]:
                     # Extract domain for source name
                     source = url.split("/")[2] if len(url.split("/")) > 2 else "Unknown source"
 
-                    # Estimate similarity (Yandex orders by relevance)
-                    similarity = 0.95 - (len(matches) * 0.05)  # Decreasing confidence
+                    # STRICTER: Only first 2-3 results are high confidence
+                    # Yandex orders by relevance, so top results are best matches
+                    if idx == 0:
+                        similarity = 0.88  # First result: very high confidence
+                    elif idx == 1:
+                        similarity = 0.78  # Second result: high confidence
+                    elif idx == 2:
+                        similarity = 0.72  # Third result: moderate confidence
+                    else:
+                        similarity = max(0.50, 0.70 - (idx - 3) * 0.05)  # Declining
 
-                    matches.append({
-                        "source": f"Found on {source}",
-                        "url": url,
-                        "similarity": max(0.5, similarity),
-                        "work_id": None,
-                        "registered_date": "",
-                    })
+                    # STRICTER: Filter out low-confidence matches (< 70%)
+                    if similarity < 0.70:
+                        continue
 
-            return matches
+                    # Filter common false-positive domains
+                    ignore_domains = ["pinterest.com", "tumblr.com", "imgur.com", "reddit.com"]
+                    if any(domain in source.lower() for domain in ignore_domains):
+                        similarity *= 0.85  # Reduce confidence for aggregator sites
+
+                    if similarity >= 0.70:  # Only keep meaningful matches
+                        matches.append({
+                            "source": f"Found on {source}",
+                            "url": url,
+                            "similarity": round(similarity, 3),
+                            "work_id": None,
+                            "registered_date": "",
+                        })
+
+            return matches[:5]  # Return max 5 highest-confidence matches
     except Exception as e:
         # If web search fails, return empty (fallback to local database)
         print(f"Web search error: {e}")
@@ -428,7 +446,7 @@ async def detect_copyright(req: CopyrightDetectRequest):
             continue
 
         similarity = calculate_similarity(uploaded_hashes, stored_hashes)
-        if similarity >= 0.45:  # Lowered threshold for better detection
+        if similarity >= 0.70:  # STRICTER: Only high-confidence local matches
             listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
             name = work.get("title", "Registered Artwork")
             if work.get("owner_username"):
@@ -447,19 +465,27 @@ async def detect_copyright(req: CopyrightDetectRequest):
     # Sort all matches (web + local) by similarity
     matches.sort(key=lambda m: m["similarity"], reverse=True)
 
+    # STRICTER VERDICT LOGIC: Require strong evidence for copyright flag
     if matches:
         top = matches[0]["similarity"]
-        if top >= 0.92:
-            status, message = "match_found", f"Exact or near-exact match found ({int(top * 100)}% similarity). This image appears to be registered or protected."
-        elif top >= 0.80:
-            status, message = "match_found", f"Very high confidence match ({int(top * 100)}% similarity). Strong similarity to registered artwork detected."
-        elif top >= 0.65:
-            status, message = "match_found", f"High confidence match ({int(top * 100)}% similarity). This image closely resembles protected content."
-        elif top >= 0.50:
-            status, message = "uncertain", f"Possible match detected ({int(top * 100)}% similarity). Image shows notable similarities to existing work."
+        high_conf_matches = [m for m in matches if m["similarity"] >= 0.85]
+        medium_conf_matches = [m for m in matches if 0.70 <= m["similarity"] < 0.85]
+
+        # MATCH_FOUND: Need multiple high-confidence matches OR one exact match
+        if top >= 0.90 or len(high_conf_matches) >= 2:
+            status = "match_found"
+            message = f"Copyright match detected ({int(top * 100)}% similarity). This image appears on {len(matches)} external source(s)."
+            confidence = top
+        # UNCERTAIN: Single high-confidence match OR multiple medium matches
+        elif len(high_conf_matches) >= 1 or len(medium_conf_matches) >= 2:
+            status = "uncertain"
+            message = f"Possible copyright issue ({int(top * 100)}% similarity). Similar images found but confidence is moderate."
+            confidence = top
+        # CLEAN: Low confidence matches don't count
         else:
-            status, message = "uncertain", f"Weak match ({int(top * 100)}% similarity). Minor similarities detected but may be coincidental."
-        confidence = top
+            status = "clean"
+            confidence = 0.90
+            message = "No significant matches found on the web. This image appears to be original."
     else:
         status = "clean"
         confidence = 0.95
