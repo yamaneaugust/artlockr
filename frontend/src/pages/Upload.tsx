@@ -71,10 +71,21 @@ export default function Upload() {
       toast.success('Work uploaded!')
       setStep('listing')
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        'Upload failed'
-      toast.error(msg)
+      console.error('Upload error:', err)
+      const axiosError = err as { response?: { data?: { detail?: string } }; message?: string; code?: string }
+      let msg = 'Upload failed'
+
+      if (axiosError.response?.data?.detail) {
+        msg = axiosError.response.data.detail
+      } else if (axiosError.code === 'ECONNABORTED') {
+        msg = 'Upload timed out. Please try a smaller file or check your connection.'
+      } else if (axiosError.code === 'ERR_NETWORK') {
+        msg = 'Network error. Please check if the backend is running.'
+      } else if (axiosError.message) {
+        msg = axiosError.message
+      }
+
+      toast.error(msg, { duration: 5000 })
     } finally {
       setUploading(false)
     }

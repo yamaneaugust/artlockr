@@ -4,6 +4,9 @@ const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const http: AxiosInstance = axios.create({ baseURL: BASE })
 
+// Log API base URL for debugging
+console.log('API Base URL:', BASE)
+
 // ── Auth / Profiles ───────────────────────────────────────────────────────────
 
 export const register = (
