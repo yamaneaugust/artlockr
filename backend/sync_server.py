@@ -28,9 +28,11 @@ app = FastAPI(title="ArtLock Sync Backend", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Wildcard origin + credentials is invalid per CORS spec
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Store data in /data if available (Railway volume), otherwise /tmp
