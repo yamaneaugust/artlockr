@@ -12,15 +12,8 @@ import io
 from pathlib import Path
 from typing import Any
 
-try:
-    from PIL import Image
-    import imagehash
-    IMAGING_AVAILABLE = True
-except ImportError:
-    Image = None  # type: ignore[assignment]
-    imagehash = None  # type: ignore[assignment]
-    IMAGING_AVAILABLE = False
-
+import numpy as np
+from PIL import Image
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -30,7 +23,7 @@ app = FastAPI(title="ArtLock Sync Backend", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,  # Wildcard origin + credentials is invalid per CORS spec
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -53,7 +46,6 @@ def load_store() -> dict[str, list]:
 def save_store(data: dict[str, list]) -> None:
     STORE_FILE.write_text(json.dumps(data, indent=2))
 
-# Load on startup
 store = load_store()
 
 
@@ -69,6 +61,71 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+
+# ── Perceptual hashing (inline, no imagehash dep) ───────────────────────
+
+_DCT_CACHE: dict[int, np.ndarray] = {}
+
+def _dct_matrix(n: int) -> np.ndarray:
+    if n not in _DCT_CACHE:
+        k = np.arange(n)
+        D = np.cos(np.pi * k[:, None] * (2 * k[None, :] + 1) / (2 * n))
+        D[0] /= np.sqrt(n)
+        D[1:] *= np.sqrt(2.0 / n)
+        _DCT_CACHE[n] = D
+    return _DCT_CACHE[n]
+
+def _phash(img: Image.Image, hash_size: int = 8) -> str:
+    """Perceptual hash via 2D DCT."""
+    size = hash_size * 4
+    gray = img.convert("L").resize((size, size), Image.LANCZOS)
+    pixels = np.array(gray, dtype=float)
+    D = _dct_matrix(size)
+    dct = D @ pixels @ D.T
+    low = dct[:hash_size, :hash_size]
+    med = low[0:, 1:].mean()  # exclude DC component
+    return "".join("1" if v > med else "0" for v in low.flatten())
+
+def _dhash(img: Image.Image, hash_size: int = 8) -> str:
+    """Difference hash (horizontal gradient)."""
+    gray = img.convert("L").resize((hash_size + 1, hash_size), Image.LANCZOS)
+    pixels = np.array(gray)
+    diff = pixels[:, 1:] > pixels[:, :-1]
+    return "".join("1" if v else "0" for v in diff.flatten())
+
+def _ahash(img: Image.Image, hash_size: int = 8) -> str:
+    """Average hash."""
+    gray = img.convert("L").resize((hash_size, hash_size), Image.LANCZOS)
+    pixels = np.array(gray, dtype=float)
+    avg = pixels.mean()
+    return "".join("1" if v > avg else "0" for v in pixels.flatten())
+
+def compute_image_hashes(img: Image.Image) -> dict:
+    return {
+        "phash": _phash(img),
+        "dhash": _dhash(img),
+        "ahash": _ahash(img),
+    }
+
+def hamming_distance(h1: str, h2: str) -> int:
+    if len(h1) != len(h2):
+        return 999
+    return sum(a != b for a, b in zip(h1, h2))
+
+def calculate_similarity(hashes1: dict, hashes2: dict) -> float:
+    if not hashes1 or not hashes2:
+        return 0.0
+    max_dist = 64
+    weights = {"phash": 0.5, "dhash": 0.25, "ahash": 0.25}
+    total_w = 0.0
+    weighted_sum = 0.0
+    for ht, w in weights.items():
+        if ht in hashes1 and ht in hashes2:
+            dist = hamming_distance(hashes1[ht], hashes2[ht])
+            weighted_sum += max(0.0, 1 - dist / max_dist) * w
+            total_w += w
+    return weighted_sum / total_w if total_w else 0.0
 
 
 # ── Works ───────────────────────────────────────────────────────────────
@@ -90,30 +147,22 @@ class WorkCreate(BaseModel):
     perceptual_hashes: dict | None = None
 
 
-def compute_perceptual_hashes_from_data_url(data_url: str) -> dict | None:
-    """Compute perceptual hashes from a base64 data URL. Returns None on failure."""
-    if not IMAGING_AVAILABLE or not data_url:
+def _hashes_from_data_url(data_url: str) -> dict | None:
+    if not data_url:
         return None
     try:
-        image_bytes = base64.b64decode(data_url.split(',')[1] if ',' in data_url else data_url)
-        image = Image.open(io.BytesIO(image_bytes))
-        if image.mode not in ('RGB', 'L'):
-            image = image.convert('RGB')
-        # Resize to speed up hashing
-        image.thumbnail((512, 512))
-        return {
-            "phash": str(imagehash.phash(image)),
-            "dhash": str(imagehash.dhash(image)),
-            "ahash": str(imagehash.average_hash(image)),
-            "whash": str(imagehash.whash(image)),
-        }
+        raw = base64.b64decode(data_url.split(",")[1] if "," in data_url else data_url)
+        img = Image.open(io.BytesIO(raw))
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        img.thumbnail((512, 512))
+        return compute_image_hashes(img)
     except Exception:
         return None
 
 
 @app.get("/sync/works")
 def list_works():
-    # Don't send perceptual_hashes to client (internal use only)
     return {"items": [{k: v for k, v in w.items() if k != "perceptual_hashes"} for w in store["works"]]}
 
 
@@ -122,12 +171,8 @@ def create_work(work: WorkCreate):
     data = work.model_dump()
     if not data.get("created_at"):
         data["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-
-    # Pre-compute perceptual hashes for fast detection
     if not data.get("perceptual_hashes") and data.get("preview_url"):
-        data["perceptual_hashes"] = compute_perceptual_hashes_from_data_url(data["preview_url"])
-
-    # Dedupe by id
+        data["perceptual_hashes"] = _hashes_from_data_url(data["preview_url"])
     store["works"] = [w for w in store["works"] if w.get("id") != data["id"]]
     store["works"].append(data)
     save_store(store)
@@ -170,7 +215,6 @@ def create_listing(listing: ListingCreate):
     data = listing.model_dump()
     if not data.get("created_at"):
         data["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-    # Replace any existing listing with the same id
     store["listings"] = [l for l in store["listings"] if l.get("id") != data["id"]]
     store["listings"].append(data)
     save_store(store)
@@ -214,7 +258,6 @@ def create_purchase(purchase: PurchaseCreate):
     if not data.get("purchased_at"):
         data["purchased_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     store["purchases"].append(data)
-    # Increment sales_count on the listing
     for l in store["listings"]:
         if l.get("id") == data["listing_id"]:
             l["sales_count"] = (l.get("sales_count") or 0) + 1
@@ -273,143 +316,70 @@ def stats():
     }
 
 
-# ── Copyright Detection (Perceptual Hash Based) ────────────────────────
+# ── Copyright Detection ──────────────────────────────────────────────────
 
 class CopyrightDetectRequest(BaseModel):
-    image_data: str  # Base64 encoded image
+    image_data: str
     filename: str
     file_size: int | None = None
     file_type: str | None = None
 
 
-def compute_image_hashes(image) -> dict:
-    """Compute multiple perceptual hashes for robust similarity detection."""
-    return {
-        "phash": str(imagehash.phash(image)),      # Perceptual hash (most robust)
-        "dhash": str(imagehash.dhash(image)),      # Difference hash (fast)
-        "ahash": str(imagehash.average_hash(image)), # Average hash
-        "whash": str(imagehash.whash(image)),      # Wavelet hash (best for scaling)
-    }
-
-
-def hamming_distance(hash1: str, hash2: str) -> int:
-    """Calculate Hamming distance between two hashes."""
-    if len(hash1) != len(hash2):
-        return 999
-    return sum(c1 != c2 for c1, c2 in zip(hash1, hash2))
-
-
-def calculate_similarity(hashes1: dict, hashes2: dict) -> float:
-    """
-    Calculate similarity score (0-1) between two sets of image hashes.
-    Uses weighted average of multiple hash types for accuracy.
-    """
-    if not hashes1 or not hashes2:
-        return 0.0
-
-    # Max Hamming distance for each hash type (64-bit hashes = 64 max distance)
-    max_distance = 64
-
-    # Calculate normalized similarity for each hash type
-    similarities = {}
-    weights = {"phash": 0.4, "dhash": 0.2, "ahash": 0.2, "whash": 0.2}
-
-    for hash_type in ["phash", "dhash", "ahash", "whash"]:
-        if hash_type in hashes1 and hash_type in hashes2:
-            distance = hamming_distance(hashes1[hash_type], hashes2[hash_type])
-            similarities[hash_type] = max(0, 1 - (distance / max_distance))
-
-    # Weighted average
-    total_weight = sum(weights[k] for k in similarities.keys())
-    if total_weight == 0:
-        return 0.0
-
-    weighted_sum = sum(similarities[k] * weights[k] for k in similarities.keys())
-    return weighted_sum / total_weight
-
-
 @app.post("/api/v1/copyright/detect")
 def detect_copyright(req: CopyrightDetectRequest):
-    """
-    Real perceptual hash-based copyright detection.
-    Uses pre-computed hashes for fast comparison against registered works.
-    """
-    if not IMAGING_AVAILABLE:
-        return {
-            "status": "clean",
-            "confidence": 0.85,
-            "matches": [],
-            "message": "No copyright violations detected. Note: Advanced image analysis is currently unavailable, performing basic checks only.",
-            "scanned_works": len(store["works"]),
-            "hash_algorithms": ["basic"],
-        }
-
-    # Compute hashes for uploaded image
     try:
-        image_bytes = base64.b64decode(req.image_data.split(',')[1] if ',' in req.image_data else req.image_data)
-        image = Image.open(io.BytesIO(image_bytes))
-        if image.mode not in ('RGB', 'L'):
-            image = image.convert('RGB')
-        image.thumbnail((512, 512))
-        uploaded_hashes = compute_image_hashes(image)
+        raw = base64.b64decode(req.image_data.split(",")[1] if "," in req.image_data else req.image_data)
+        img = Image.open(io.BytesIO(raw))
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        img.thumbnail((512, 512))
+        uploaded_hashes = compute_image_hashes(img)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to process image: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to process image: {e}")
 
-    # Compare against registered works using pre-computed hashes
     matches = []
     store_updated = False
 
     for work in store["works"]:
-        # Use pre-computed hashes if available
         stored_hashes = work.get("perceptual_hashes")
-
-        # Lazily compute hashes for works that don't have them yet
         if not stored_hashes and work.get("preview_url"):
-            stored_hashes = compute_perceptual_hashes_from_data_url(work["preview_url"])
+            stored_hashes = _hashes_from_data_url(work["preview_url"])
             if stored_hashes:
                 work["perceptual_hashes"] = stored_hashes
                 store_updated = True
-
         if not stored_hashes:
             continue
 
         similarity = calculate_similarity(uploaded_hashes, stored_hashes)
-
         if similarity >= 0.60:
             listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
-            source_name = work.get("title", "Registered Artwork")
+            name = work.get("title", "Registered Artwork")
             if work.get("owner_username"):
-                source_name = f"{source_name} by {work['owner_username']}"
-
+                name = f"{name} by {work['owner_username']}"
             matches.append({
-                "source": source_name,
+                "source": name,
                 "url": f"/marketplace/{listing['id']}" if listing else "#",
                 "similarity": round(similarity, 3),
                 "work_id": work["id"],
                 "registered_date": work.get("created_at", ""),
             })
 
-    # Persist any newly computed hashes
     if store_updated:
         save_store(store)
 
     matches.sort(key=lambda m: m["similarity"], reverse=True)
 
     if matches:
-        max_similarity = matches[0]["similarity"]
-        if max_similarity >= 0.95:
-            status = "match_found"
-            message = f"Exact or near-exact match found ({int(max_similarity * 100)}% similarity). This image is registered in our database."
-        elif max_similarity >= 0.85:
-            status = "match_found"
-            message = f"High confidence match found ({int(max_similarity * 100)}% similarity). This image closely matches registered artwork."
-        elif max_similarity >= 0.70:
-            status = "uncertain"
-            message = f"Potential match detected ({int(max_similarity * 100)}% similarity). The images are similar but may have modifications."
+        top = matches[0]["similarity"]
+        if top >= 0.95:
+            status, message = "match_found", f"Exact or near-exact match found ({int(top * 100)}% similarity). This image is registered in our database."
+        elif top >= 0.85:
+            status, message = "match_found", f"High confidence match found ({int(top * 100)}% similarity). This image closely matches registered artwork."
+        elif top >= 0.70:
+            status, message = "uncertain", f"Potential match detected ({int(top * 100)}% similarity). The images are similar but may have modifications."
         else:
-            status = "uncertain"
-            message = f"Low confidence match ({int(max_similarity * 100)}% similarity). Minor similarities detected."
-        confidence = max_similarity
+            status, message = "uncertain", f"Low confidence match ({int(top * 100)}% similarity). Minor similarities detected."
+        confidence = top
     else:
         status = "clean"
         confidence = 0.95
@@ -421,5 +391,5 @@ def detect_copyright(req: CopyrightDetectRequest):
         "matches": matches[:10],
         "message": message,
         "scanned_works": len(store["works"]),
-        "hash_algorithms": ["pHash", "dHash", "aHash", "wHash"],
+        "hash_algorithms": ["pHash", "dHash", "aHash"],
     }
