@@ -56,6 +56,16 @@ export default function Upload() {
       reader.onerror = reject
       reader.readAsDataURL(file)
     })
+
+    // Compute file hash (SHA-256) and fingerprint for copyright detection
+    const arrayBuffer = await file.arrayBuffer()
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+    const fileHash = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    const bytes = new Uint8Array(arrayBuffer)
+    const fingerprint = `${bytes.length}:${bytes[0]}:${bytes[Math.floor(bytes.length / 2)]}:${bytes[bytes.length - 1]}`
+
     const works = JSON.parse(localStorage.getItem('artlock-works') || '[]')
     const workId = Date.now()
     const workData = {
@@ -68,6 +78,8 @@ export default function Upload() {
       work_type: 'image',
       file_format: file.type.split('/')[1] || 'unknown',
       file_size: file.size,
+      file_hash: fileHash,
+      fingerprint,
       preview_url: dataUrl,
       created_at: new Date().toISOString(),
     }
