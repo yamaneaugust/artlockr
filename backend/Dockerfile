@@ -1,4 +1,4 @@
-# ArtLock Sync Backend (cache-bust: v4)
+# ArtLock Sync Backend (cache-bust: v5)
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -12,4 +12,4 @@ COPY sync_server.py ./
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["sh", "-c", "uvicorn sync_server:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["uvicorn", "sync_server:app", "--host", "0.0.0.0", "--port", "8000"]
