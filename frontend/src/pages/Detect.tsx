@@ -36,19 +36,48 @@ export default function Detect() {
     accept: { 'image/*': [], 'audio/*': [], 'video/*': [] },
   })
 
+  // Resize image via canvas to reduce request size (perceptual hashing works well on smaller images)
+  const resizeImage = (file: File, maxSize = 512): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let { width, height } = img
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width
+          width = maxSize
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height
+          height = maxSize
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Canvas context unavailable'))
+          return
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+      }
+      img.onerror = () => reject(new Error('Image load failed'))
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   const handleDetect = async () => {
     if (!file) return
     setLoading(true)
     try {
-      // Convert file to base64 for backend processing
-      const arrayBuffer = await file.arrayBuffer()
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      )
-      const imageData = `data:${file.type};base64,${base64}`
-
-      // Simulate realistic processing time
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Resize image to keep request small and fast
+      const imageData = file.type.startsWith('image/')
+        ? await resizeImage(file)
+        : await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
 
       // Call backend for perceptual hash-based similarity detection
       try {
@@ -63,7 +92,7 @@ export default function Detect() {
               file_size: file.size,
               file_type: file.type,
             }),
-            signal: AbortSignal.timeout(30000),
+            signal: AbortSignal.timeout(45000),
           },
         )
 
@@ -103,13 +132,14 @@ export default function Detect() {
           throw new Error(`Backend returned ${res.status}`)
         }
       } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err)
         console.error('Backend detection failed:', err)
-        toast.error('Copyright detection service unavailable')
+        toast.error(`Detection failed: ${errorMsg}`)
         setResult({
           status: 'uncertain',
           confidence: 0,
           matches: [],
-          message: 'Copyright detection service is temporarily unavailable. Please try again later or ensure the backend is deployed.',
+          message: `Detection failed: ${errorMsg}. Check browser console for details.`,
         })
       }
     } catch (err) {

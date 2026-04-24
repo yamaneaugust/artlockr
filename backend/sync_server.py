@@ -83,11 +83,34 @@ class WorkCreate(BaseModel):
     fingerprint: str | None = None
     preview_url: str | None = None
     created_at: str | None = None
+    perceptual_hashes: dict | None = None
+
+
+def compute_perceptual_hashes_from_data_url(data_url: str) -> dict | None:
+    """Compute perceptual hashes from a base64 data URL. Returns None on failure."""
+    if not IMAGING_AVAILABLE or not data_url:
+        return None
+    try:
+        image_bytes = base64.b64decode(data_url.split(',')[1] if ',' in data_url else data_url)
+        image = Image.open(io.BytesIO(image_bytes))
+        if image.mode not in ('RGB', 'L'):
+            image = image.convert('RGB')
+        # Resize to speed up hashing
+        image.thumbnail((512, 512))
+        return {
+            "phash": str(imagehash.phash(image)),
+            "dhash": str(imagehash.dhash(image)),
+            "ahash": str(imagehash.average_hash(image)),
+            "whash": str(imagehash.whash(image)),
+        }
+    except Exception:
+        return None
 
 
 @app.get("/sync/works")
 def list_works():
-    return {"items": store["works"]}
+    # Don't send perceptual_hashes to client (internal use only)
+    return {"items": [{k: v for k, v in w.items() if k != "perceptual_hashes"} for w in store["works"]]}
 
 
 @app.post("/sync/works")
@@ -95,6 +118,11 @@ def create_work(work: WorkCreate):
     data = work.model_dump()
     if not data.get("created_at"):
         data["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+
+    # Pre-compute perceptual hashes for fast detection
+    if not data.get("perceptual_hashes") and data.get("preview_url"):
+        data["perceptual_hashes"] = compute_perceptual_hashes_from_data_url(data["preview_url"])
+
     # Dedupe by id
     store["works"] = [w for w in store["works"] if w.get("id") != data["id"]]
     store["works"].append(data)
@@ -300,11 +328,9 @@ def calculate_similarity(hashes1: dict, hashes2: dict) -> float:
 def detect_copyright(req: CopyrightDetectRequest):
     """
     Real perceptual hash-based copyright detection.
-    Compares uploaded image against all registered works using multiple hash algorithms.
-    Returns actual similarity scores based on image content analysis.
+    Uses pre-computed hashes for fast comparison against registered works.
     """
     if not IMAGING_AVAILABLE:
-        # Fallback: return clean result when imaging libraries not available
         return {
             "status": "clean",
             "confidence": 0.85,
@@ -314,70 +340,57 @@ def detect_copyright(req: CopyrightDetectRequest):
             "hash_algorithms": ["basic"],
         }
 
+    # Compute hashes for uploaded image
     try:
-        # Decode base64 image
         image_bytes = base64.b64decode(req.image_data.split(',')[1] if ',' in req.image_data else req.image_data)
         image = Image.open(io.BytesIO(image_bytes))
-
-        # Convert to RGB if necessary
         if image.mode not in ('RGB', 'L'):
             image = image.convert('RGB')
-
-        # Compute perceptual hashes for uploaded image
+        image.thumbnail((512, 512))
         uploaded_hashes = compute_image_hashes(image)
-
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process image: {str(e)}")
 
-    # Compare against all registered works
+    # Compare against registered works using pre-computed hashes
     matches = []
+    store_updated = False
 
     for work in store["works"]:
-        # Skip works without preview_url (no image to compare)
-        if not work.get("preview_url"):
+        # Use pre-computed hashes if available
+        stored_hashes = work.get("perceptual_hashes")
+
+        # Lazily compute hashes for works that don't have them yet
+        if not stored_hashes and work.get("preview_url"):
+            stored_hashes = compute_perceptual_hashes_from_data_url(work["preview_url"])
+            if stored_hashes:
+                work["perceptual_hashes"] = stored_hashes
+                store_updated = True
+
+        if not stored_hashes:
             continue
 
-        try:
-            # Decode stored work image
-            stored_image_data = work["preview_url"]
-            stored_bytes = base64.b64decode(stored_image_data.split(',')[1] if ',' in stored_image_data else stored_image_data)
-            stored_image = Image.open(io.BytesIO(stored_bytes))
+        similarity = calculate_similarity(uploaded_hashes, stored_hashes)
 
-            if stored_image.mode not in ('RGB', 'L'):
-                stored_image = stored_image.convert('RGB')
+        if similarity >= 0.60:
+            listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
+            source_name = work.get("title", "Registered Artwork")
+            if work.get("owner_username"):
+                source_name = f"{source_name} by {work['owner_username']}"
 
-            # Compute hashes for stored image
-            stored_hashes = compute_image_hashes(stored_image)
+            matches.append({
+                "source": source_name,
+                "url": f"/marketplace/{listing['id']}" if listing else "#",
+                "similarity": round(similarity, 3),
+                "work_id": work["id"],
+                "registered_date": work.get("created_at", ""),
+            })
 
-            # Calculate similarity
-            similarity = calculate_similarity(uploaded_hashes, stored_hashes)
+    # Persist any newly computed hashes
+    if store_updated:
+        save_store(store)
 
-            # Only include if similarity is above threshold (60%)
-            if similarity >= 0.60:
-                # Find associated listing
-                listing = next((l for l in store["listings"] if l.get("work_id") == work["id"]), None)
-
-                source_name = work.get("title", "Registered Artwork")
-                if work.get("owner_username"):
-                    source_name = f"{source_name} by {work['owner_username']}"
-
-                matches.append({
-                    "source": source_name,
-                    "url": f"/marketplace/{listing['id']}" if listing else "#",
-                    "similarity": round(similarity, 3),
-                    "work_id": work["id"],
-                    "registered_date": work.get("created_at", ""),
-                })
-
-        except Exception as e:
-            # Skip works that fail to process
-            print(f"Failed to process work {work.get('id')}: {e}")
-            continue
-
-    # Sort by similarity (highest first)
     matches.sort(key=lambda m: m["similarity"], reverse=True)
 
-    # Determine status and confidence
     if matches:
         max_similarity = matches[0]["similarity"]
         if max_similarity >= 0.95:
@@ -401,7 +414,7 @@ def detect_copyright(req: CopyrightDetectRequest):
     return {
         "status": status,
         "confidence": confidence,
-        "matches": matches[:10],  # Return top 10 matches
+        "matches": matches[:10],
         "message": message,
         "scanned_works": len(store["works"]),
         "hash_algorithms": ["pHash", "dHash", "aHash", "wHash"],
