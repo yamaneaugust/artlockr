@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { Upload as UploadIcon, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadWork, createListing } from '../services/api'
+import { syncPushWork, syncPushListing } from '../services/sync'
 import { useAuthStore } from '../store/authStore'
 
 const LICENSE_OPTIONS = [
@@ -86,9 +87,12 @@ export default function Upload() {
     works.push(workData)
     localStorage.setItem('artlock-works', JSON.stringify(works))
 
+    // Push to shared backend so other users can see it
+    syncPushWork({ ...workData, owner_username: user?.username })
+
     // Also save a default draft listing so the work appears in the marketplace immediately
     const listings = JSON.parse(localStorage.getItem('artlock-listings') || '[]')
-    listings.push({
+    const draftListing = {
       id: workId + 1,
       work_id: workId,
       title: meta.title,
@@ -109,8 +113,12 @@ export default function Upload() {
       },
       created_at: new Date().toISOString(),
       is_draft: true,
-    })
+    }
+    listings.push(draftListing)
     localStorage.setItem('artlock-listings', JSON.stringify(listings))
+
+    // Push to shared backend so other users see it in marketplace
+    syncPushListing(draftListing)
 
     return workId
   }
@@ -181,11 +189,16 @@ export default function Upload() {
       (l: { work_id: number; is_draft?: boolean }) => l.work_id === workId && l.is_draft
     )
     if (draftIndex >= 0) {
+      // Keep the same id so backend dedupes correctly
+      updatedListing.id = listings[draftIndex].id
       listings[draftIndex] = updatedListing
     } else {
       listings.push(updatedListing)
     }
     localStorage.setItem('artlock-listings', JSON.stringify(listings))
+
+    // Push updated listing to shared backend
+    syncPushListing(updatedListing)
   }
 
   const handleCreateListing = async (e: React.FormEvent) => {

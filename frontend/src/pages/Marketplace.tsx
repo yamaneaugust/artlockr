@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Filter, Music, Image, Video, FileText, Package } from 'lucide-react'
 import { getListings, getStats } from '../services/api'
+import { syncFetchListings, syncFetchStats } from '../services/sync'
 
 const WORK_TYPE_ICONS: Record<string, React.ElementType> = {
   image: Image,
@@ -77,14 +78,22 @@ export default function Marketplace() {
   const fetchListings = async () => {
     setLoading(true)
     const localListings = loadLocalListings()
+
+    // Pull in listings from shared backend (other users' uploads)
+    const synced = (await syncFetchListings()) as Listing[]
+
+    // Merge local + synced, deduped by id (local wins)
+    const localIds = new Set(localListings.map((l) => l.id))
+    const mergedAll = [...localListings, ...synced.filter((s) => !localIds.has(s.id))]
+
     try {
       const params: Record<string, unknown> = { page, page_size: 24, sort_by: sortBy }
       if (search) params.search = search
       if (workType) params.work_type = workType
       if (licenseType) params.license_type = licenseType
       const { data } = await getListings(params)
-      // Merge local listings (user uploads) with backend listings
-      const merged = [...filterListings(localListings), ...(data.items ?? [])]
+      // Merge synced + local + backend listings
+      const merged = [...filterListings(mergedAll), ...(data.items ?? [])]
       setListings(merged)
       setTotalPages(data.pages ?? 1)
     } catch {
@@ -131,8 +140,8 @@ export default function Marketplace() {
           created_at: new Date().toISOString(),
         },
       ]
-      // Local user uploads appear first, then sample listings
-      const merged = [...filterListings(localListings), ...filterListings(sampleListings)]
+      // Local + synced (other users) first, then sample listings
+      const merged = [...filterListings(mergedAll), ...filterListings(sampleListings)]
       setListings(merged)
       setTotalPages(1)
     } finally {
@@ -141,19 +150,34 @@ export default function Marketplace() {
   }
 
   useEffect(() => {
-    const localCount = loadLocalListings().length
-    getStats()
-      .then(({ data }) => setStats({ ...data, total_listings: (data.total_listings ?? 0) + localCount }))
-      .catch(() => {
-        // Backend unreachable - show sample stats
+    const loadStats = async () => {
+      const localCount = loadLocalListings().length
+      // Try sync backend first (shared stats across all users)
+      const synced = await syncFetchStats()
+      if (synced) {
         setStats({
-          total_listings: 127 + localCount,
-          total_artists: 43,
-          total_companies: 12,
-          total_sales: 89,
-          total_volume_usd: 24567,
+          total_listings: (synced.total_listings as number) || 0,
+          total_artists: (synced.total_artists as number) || 0,
+          total_companies: (synced.total_companies as number) || 0,
+          total_sales: (synced.total_purchases as number) || 0,
+          total_volume_usd: (synced.total_volume_usd as number) || 0,
         })
-      })
+        return
+      }
+      // Fall back to legacy backend
+      getStats()
+        .then(({ data }) => setStats({ ...data, total_listings: (data.total_listings ?? 0) + localCount }))
+        .catch(() => {
+          setStats({
+            total_listings: 127 + localCount,
+            total_artists: 43,
+            total_companies: 12,
+            total_sales: 89,
+            total_volume_usd: 24567,
+          })
+        })
+    }
+    loadStats()
   }, [])
 
   useEffect(() => {

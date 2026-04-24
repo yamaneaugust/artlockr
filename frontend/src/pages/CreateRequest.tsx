@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
+import { syncPushRequest } from '../services/sync'
 
 const WORK_TYPES = [
   { value: 'image', label: 'Images / Artwork' },
@@ -46,7 +47,7 @@ export default function CreateRequest() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500))
       const requests = JSON.parse(localStorage.getItem('artlock-requests') || '[]')
-      requests.push({
+      const requestData = {
         id: Date.now(),
         company_id: user.id,
         company_username: user.username,
@@ -62,8 +63,11 @@ export default function CreateRequest() {
         requirements: form.requirements,
         status: 'open',
         created_at: new Date().toISOString(),
-      })
+      }
+      requests.push(requestData)
       localStorage.setItem('artlock-requests', JSON.stringify(requests))
+      // Sync to shared backend so artists can see the request
+      syncPushRequest(requestData)
       toast.success('Request posted!')
       setSubmitted(true)
     } catch {

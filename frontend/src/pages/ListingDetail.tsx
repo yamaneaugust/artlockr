@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Music, Image, Video, FileText, Package, CheckCircle, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getListing, purchaseListing } from '../services/api'
+import { syncFetchListing, syncPushPurchase } from '../services/sync'
 import { useAuthStore } from '../store/authStore'
 
 const WORK_TYPE_ICONS: Record<string, React.ElementType> = {
@@ -28,27 +29,38 @@ export default function ListingDetail() {
 
   useEffect(() => {
     const listingId = Number(id)
-    getListing(listingId)
-      .then(({ data }) => {
+    const fetchListing = async () => {
+      // Try local first (fastest)
+      const local = loadLocalListing(listingId)
+      if (local) {
+        setListing(local)
+        setLoading(false)
+        return
+      }
+
+      // Try sync backend (shared listings from other users)
+      const synced = await syncFetchListing(listingId)
+      if (synced && synced.work) {
+        setListing(synced)
+        setLoading(false)
+        return
+      }
+
+      // Fall back to legacy backend
+      try {
+        const { data } = await getListing(listingId)
         if (data && data.work) {
           setListing(data)
         } else {
-          // Backend returned malformed data - try local
-          const local = loadLocalListing(listingId)
-          if (local) setListing(local)
-          else toast.error('Listing not found')
-        }
-      })
-      .catch(() => {
-        // Backend unreachable - try local
-        const local = loadLocalListing(listingId)
-        if (local) {
-          setListing(local)
-        } else {
           toast.error('Listing not found')
         }
-      })
-      .finally(() => setLoading(false))
+      } catch {
+        toast.error('Listing not found')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchListing()
   }, [id])
 
   const generateLicenseKey = (): string => {
@@ -61,19 +73,20 @@ export default function ListingDetail() {
   const savePurchaseLocally = () => {
     const purchases = JSON.parse(localStorage.getItem('artlock-purchases') || '[]')
     const licenseKey = generateLicenseKey()
-    purchases.push({
+    const purchaseData = {
       id: Date.now(),
       listing_id: Number(id),
       buyer_id: user?.id,
       buyer_username: user?.username,
       license_key: licenseKey,
       price_paid: (listing?.price as number) ?? 0,
-      license_type: listing?.license_type,
-      listing_title: listing?.title,
-      work_preview_url: (listing?.work as Record<string, unknown>)?.preview_url,
-      artist_username: (listing?.artist as Record<string, unknown>)?.display_name,
+      license_type: listing?.license_type as string | undefined,
+      listing_title: listing?.title as string | undefined,
+      work_preview_url: ((listing?.work as Record<string, unknown>)?.preview_url) as string | undefined,
+      artist_username: ((listing?.artist as Record<string, unknown>)?.display_name) as string | undefined,
       purchased_at: new Date().toISOString(),
-    })
+    }
+    purchases.push(purchaseData)
     localStorage.setItem('artlock-purchases', JSON.stringify(purchases))
 
     // Increment sales count on the listing
@@ -83,6 +96,9 @@ export default function ListingDetail() {
       listings[idx].sales_count = (listings[idx].sales_count || 0) + 1
       localStorage.setItem('artlock-listings', JSON.stringify(listings))
     }
+
+    // Push purchase to shared backend (so artist sees the sale)
+    syncPushPurchase(purchaseData as unknown as Record<string, unknown>)
 
     return licenseKey
   }
