@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Search, Upload, AlertTriangle, CheckCircle, Loader2, ShieldCheck } from 'lucide-react'
+import { Search, Upload, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 type ResultStatus = 'clean' | 'match_found' | 'uncertain'
@@ -193,21 +193,6 @@ export default function Detect() {
                 </>
               )}
             </button>
-
-            <div className="bg-blue-900 rounded-xl border border-blue-900/30 p-4">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-white">How it works</p>
-                  <ul className="mt-1 space-y-1 text-xs text-blue-300">
-                    <li>• Your image is analyzed using perceptual hashing algorithms (pHash, dHash, wHash)</li>
-                    <li>• We compare against all registered artworks in our database</li>
-                    <li>• Detects similar images even if resized, cropped, or slightly modified</li>
-                    <li>• Results show similarity scores based on actual image content analysis</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
         ) : (
           <div className="space-y-6">
