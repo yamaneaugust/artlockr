@@ -49,18 +49,46 @@ export default function Marketplace() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
+  const loadLocalListings = (): Listing[] => {
+    try {
+      const raw = localStorage.getItem('artlock-listings')
+      return raw ? JSON.parse(raw) : []
+    } catch {
+      return []
+    }
+  }
+
+  const filterListings = (items: Listing[]): Listing[] => {
+    let filtered = items
+    if (search) {
+      const q = search.toLowerCase()
+      filtered = filtered.filter(
+        (l) =>
+          l.title.toLowerCase().includes(q) ||
+          l.description.toLowerCase().includes(q) ||
+          l.work.tags?.some((t) => t.toLowerCase().includes(q)),
+      )
+    }
+    if (workType) filtered = filtered.filter((l) => l.work.work_type === workType)
+    if (licenseType) filtered = filtered.filter((l) => l.license_type === licenseType)
+    return filtered
+  }
+
   const fetchListings = async () => {
     setLoading(true)
+    const localListings = loadLocalListings()
     try {
       const params: Record<string, unknown> = { page, page_size: 24, sort_by: sortBy }
       if (search) params.search = search
       if (workType) params.work_type = workType
       if (licenseType) params.license_type = licenseType
       const { data } = await getListings(params)
-      setListings(data.items ?? [])
+      // Merge local listings (user uploads) with backend listings
+      const merged = [...filterListings(localListings), ...(data.items ?? [])]
+      setListings(merged)
       setTotalPages(data.pages ?? 1)
     } catch {
-      // Backend unreachable - show sample listings
+      // Backend unreachable - show local listings + sample listings
       const sampleListings: Listing[] = [
         {
           id: 1,
@@ -103,7 +131,9 @@ export default function Marketplace() {
           created_at: new Date().toISOString(),
         },
       ]
-      setListings(sampleListings)
+      // Local user uploads appear first, then sample listings
+      const merged = [...filterListings(localListings), ...filterListings(sampleListings)]
+      setListings(merged)
       setTotalPages(1)
     } finally {
       setLoading(false)
@@ -111,12 +141,13 @@ export default function Marketplace() {
   }
 
   useEffect(() => {
+    const localCount = loadLocalListings().length
     getStats()
-      .then(({ data }) => setStats(data))
+      .then(({ data }) => setStats({ ...data, total_listings: (data.total_listings ?? 0) + localCount }))
       .catch(() => {
         // Backend unreachable - show sample stats
         setStats({
-          total_listings: 127,
+          total_listings: 127 + localCount,
           total_artists: 43,
           total_companies: 12,
           total_sales: 89,
